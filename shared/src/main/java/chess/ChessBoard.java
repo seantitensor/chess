@@ -113,7 +113,4 @@ public class ChessBoard implements Cloneable {
         }
         return clone;
     }
-    }
-
-
 }
