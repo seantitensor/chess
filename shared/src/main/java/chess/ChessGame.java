@@ -179,7 +179,7 @@ public class ChessGame {
     private boolean stopCheckCheck(ChessMove move) {
         ChessBoard testBoard = (ChessBoard) board.clone();
         ChessPiece piece = testBoard.getPiece(move.getStartPosition());
-
+        
 
 
 

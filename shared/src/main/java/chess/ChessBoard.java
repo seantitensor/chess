@@ -97,4 +97,23 @@ public class ChessBoard implements Cloneable {
             addPiece(new ChessPosition(2, i), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
         }
     }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        ChessBoard clone= (ChessBoard) super.clone();
+
+        clone.squares = new ChessPiece[8][8];
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (squares[i][j] != null) {
+                    clone.squares[i][j] = (ChessPiece) squares[i][j].clone();
+                }
+            }
+        }
+        return clone;
+    }
+    }
+
+
 }
