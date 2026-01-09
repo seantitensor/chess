@@ -8,7 +8,12 @@ import java.util.Arrays;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-public class ChessBoard {
+public class ChessBoard implements Cloneable {
+
+    @Override
+    public String toString() {
+        return "ChessBoard [squares=" + Arrays.deepToString(squares) + "]";
+    }
 
     @Override
     public int hashCode() {

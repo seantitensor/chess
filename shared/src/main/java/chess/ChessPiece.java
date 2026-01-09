@@ -19,6 +19,11 @@ import chess.movecalculators.RookMoveCalculator;
 public class ChessPiece {
 
     @Override
+    public String toString() {
+        return "ChessPiece [pieceColor=" + pieceColor + ", type=" + type + "]";
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
