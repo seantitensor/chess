@@ -189,7 +189,7 @@ public class ChessGame {
         if (!isInCheck(teamColor)) {
             return false;
         }
-        return !checkMovesToStopCheckmate(teamColor);
+        return !movesExistToStopCheck(teamColor);
     }
 
     /**
@@ -219,12 +219,12 @@ public class ChessGame {
      * @param teamColor which team to check for checkmate
      * @return True if there is a move that can stop checkmate
      */
-    private boolean checkMovesToStopCheckmate(TeamColor teamColor) {
+    private boolean movesExistToStopCheck(TeamColor teamColor) {
         Collection<ChessMove> moves = allMoves(teamColor);
         
         for (ChessMove move: moves) {
             try {
-                if (stopCheckCheck(move, teamColor)) {
+                if (moveStopsCheck(move, teamColor)) {
                     return true;
                 }
             } catch (InvalidMoveException e) {
@@ -242,7 +242,7 @@ public class ChessGame {
      * @return True if there is a move that can stop checkmate
      * @throws InvalidMoveException if the move is invalid
      */
-    private boolean stopCheckCheck(ChessMove move, TeamColor teamColor) throws InvalidMoveException {
+    private boolean moveStopsCheck(ChessMove move, TeamColor teamColor) throws InvalidMoveException {
         ChessBoard temp = board;
         try {
             this.board = (ChessBoard) board.clone();
