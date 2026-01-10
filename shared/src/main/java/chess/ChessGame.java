@@ -213,6 +213,12 @@ public class ChessGame {
 
 //Private methods
 
+    /**
+     * Determines if there are moves that can stop checkmate.
+     *
+     * @param teamColor which team to check for checkmate
+     * @return True if there is a move that can stop checkmate
+     */
     private boolean checkMovesToStopCheckmate(TeamColor teamColor) {
         Collection<ChessMove> moves = allMoves(teamColor);
         
@@ -228,6 +234,14 @@ public class ChessGame {
         return false;
     }
 
+    /**
+     * Determines if there are moves that can stop checkmate.
+     *
+     * @param teamColor which team to check for checkmate
+     * @param move the move to check if it can stop check
+     * @return True if there is a move that can stop checkmate
+     * @throws InvalidMoveException if the move is invalid
+     */
     private boolean stopCheckCheck(ChessMove move, TeamColor teamColor) throws InvalidMoveException {
         ChessBoard temp = board;
         try {
@@ -241,6 +255,12 @@ public class ChessGame {
         }
     }
 
+    /**
+     * Determines the position of the king for a given team.
+     *
+     * @param teamColor which team to check the king position for
+     * @return The position of the king for the given team, or null if not found
+     */
     private ChessPosition kingPosition(TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
@@ -254,6 +274,12 @@ public class ChessGame {
         return null;
     }
 
+    /**
+     * Gets all possible moves for a given team
+     *
+     * @param teamColor which team to get all moves for
+     * @return Collection of all possible moves for the given team
+     */
     private Collection<ChessMove> allMoves(TeamColor teamColor) {
         Collection<ChessMove> moves = new ArrayList<>();
         for (int row = 1; row <= 8; row ++) {
