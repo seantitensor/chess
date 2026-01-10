@@ -8,6 +8,37 @@ package chess;
  */
 public class ChessPosition {
 
+    private final int row;
+    private final int col;
+    
+    public ChessPosition(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
+// Public Methods
+    /**
+     * @return which row this position is in
+     * 1 codes for the bottom row
+     */
+    public int getRow() {
+        return row;
+    }
+
+    /**
+     * @return which column this position is in
+     * 1 codes for the left row
+     */
+    public int getColumn() {
+        return col;
+    }
+
+// Override Methods
+    @Override
+    public String toString() {
+        return String.format("[%d,%d]", row, col);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -32,35 +63,4 @@ public class ChessPosition {
             return false;
         return true;
     }
-
-    private final int row;
-    private final int col;
-    
-    public ChessPosition(int row, int col) {
-        this.row = row;
-        this.col = col;
-    }
-
-    /**
-     * @return which row this position is in
-     * 1 codes for the bottom row
-     */
-    public int getRow() {
-        return row;
-    }
-
-    /**
-     * @return which column this position is in
-     * 1 codes for the left row
-     */
-    public int getColumn() {
-        return col;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("[%d,%d]", row, col);
-    }
-
-    
 }

@@ -10,33 +10,6 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessGame {
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((board == null) ? 0 : board.hashCode());
-        result = prime * result + ((currentTeamColor == null) ? 0 : currentTeamColor.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ChessGame other = (ChessGame) obj;
-        if (board == null) {
-            if (other.board != null)
-                return false;
-        } else if (!board.equals(other.board))
-            return false;
-        if (currentTeamColor != other.currentTeamColor)
-            return false;
-        return true;
-    }
 
     /**
      * Enum identifying the 2 possible teams in a chess game
@@ -59,6 +32,7 @@ public class ChessGame {
         board.resetBoard();
     }
 
+// Public Methods
     /**
      * @return Which team's turn it is
      */
@@ -212,7 +186,6 @@ public class ChessGame {
     }
 
 //Private methods
-
     /**
      * Determines if there are moves that can stop checkmate.
      *
@@ -291,5 +264,34 @@ public class ChessGame {
             }
         }
         return moves;
+    }
+
+// Override methods
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((board == null) ? 0 : board.hashCode());
+        result = prime * result + ((currentTeamColor == null) ? 0 : currentTeamColor.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ChessGame other = (ChessGame) obj;
+        if (board == null) {
+            if (other.board != null)
+                return false;
+        } else if (!board.equals(other.board))
+            return false;
+        if (currentTeamColor != other.currentTeamColor)
+            return false;
+        return true;
     }
 }

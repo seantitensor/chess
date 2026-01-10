@@ -1,7 +1,5 @@
 package chess;
 
-import java.util.Arrays;
-
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -10,39 +8,11 @@ import java.util.Arrays;
  */
 public class ChessBoard implements Cloneable {
 
-    @Override
-    public String toString() {
-        return "ChessBoard [squares=" + Arrays.deepToString(squares) + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Arrays.deepHashCode(squares);
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ChessBoard other = (ChessBoard) obj;
-        if (!Arrays.deepEquals(squares, other.squares))
-            return false;
-        return true;
-    }
-
     ChessPiece[][] squares = new ChessPiece[8][8];
     
-    public ChessBoard() {
-        
-    }
+    public ChessBoard() { }
 
+// Public Methods
     /**
      * Adds a chess piece to the chessboard
      *
@@ -70,6 +40,7 @@ public class ChessBoard implements Cloneable {
      */
     public void resetBoard() {
         squares = new ChessPiece[8][8];
+
         //add black pieces
         addPiece(new ChessPosition(8, 1), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
         addPiece(new ChessPosition(8, 2), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
@@ -84,7 +55,6 @@ public class ChessBoard implements Cloneable {
         }
 
         //add white pieces
-
         addPiece(new ChessPosition(1, 1), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
         addPiece(new ChessPosition(1, 2), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
         addPiece(new ChessPosition(1, 3), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
@@ -97,13 +67,39 @@ public class ChessBoard implements Cloneable {
             addPiece(new ChessPosition(2, i), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
         }
     }
+    
+// Override Methods
+    @Override
+    public String toString() {
+        return "ChessBoard [squares=" + Arrays.deepToString(squares) + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.deepHashCode(squares);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ChessBoard other = (ChessBoard) obj;
+        if (!Arrays.deepEquals(squares, other.squares))
+            return false;
+        return true;
+    }
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
         ChessBoard clone= (ChessBoard) super.clone();
-
         clone.squares = new ChessPiece[8][8];
-
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (squares[i][j] != null) {

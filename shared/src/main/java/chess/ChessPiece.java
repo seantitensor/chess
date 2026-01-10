@@ -18,36 +18,6 @@ import chess.movecalculators.RookMoveCalculator;
  */
 public class ChessPiece implements Cloneable {
 
-    @Override
-    public String toString() {
-        return "ChessPiece [pieceColor=" + pieceColor + ", type=" + type + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((pieceColor == null) ? 0 : pieceColor.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ChessPiece other = (ChessPiece) obj;
-        if (pieceColor != other.pieceColor)
-            return false;
-        if (type != other.type)
-            return false;
-        return true;
-    }
-
     private final ChessGame.TeamColor pieceColor;
     private final ChessPiece.PieceType type;
 
@@ -56,11 +26,7 @@ public class ChessPiece implements Cloneable {
         this.type = type;
     }
 
-    @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
-
+// public methods
     /**
      * The various different chess piece options
      */
@@ -104,5 +70,41 @@ public class ChessPiece implements Cloneable {
             case PAWN -> new PawnMoveCalculator();
         };
         return calculator.pieceMoves(board, myPosition);
+    }
+
+// Override Methods
+    @Override
+    public String toString() {
+        return "ChessPiece [pieceColor=" + pieceColor + ", type=" + type + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((pieceColor == null) ? 0 : pieceColor.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ChessPiece other = (ChessPiece) obj;
+        if (pieceColor != other.pieceColor)
+            return false;
+        if (type != other.type)
+            return false;
+        return true;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }
