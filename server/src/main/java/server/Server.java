@@ -4,6 +4,9 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -45,7 +48,15 @@ public class Server {
     // exception handler
     private void exceptionHandler(Exception e, Context context) {
         var body = new Gson().toJson(Map.of("message", String.format("Error: %s", e.getMessage()), "success", false));
-        context.status(500);
+        int status = 500;
+        if (e instanceof BadRequestException) {
+            status = 400;
+        } else if (e instanceof UnauthorizedException) {
+            status = 401;
+        } else if (e instanceof AlreadyTakenException) {
+            status = 403;
+        }
+        context.status(status);
         context.json(body);
     }
 
