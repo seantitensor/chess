@@ -1,5 +1,9 @@
 package server;
 
+import java.util.Map;
+
+import com.google.gson.Gson;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -26,11 +30,7 @@ public class Server {
         javalin.delete("/db", this::clear);
 
         // exception handling
-        javalin.exception(Exception.class, (e, ctx) -> {
-            ctx.status(500);
-            ctx.json("{\"message\": \"Error: " + e.getMessage() + "\"}");
-
-        });
+        javalin.exception(Exception.class, this::exceptionHandler);
     }
 
     public int run(int desiredPort) {
@@ -40,6 +40,13 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    // exception handler
+    private void exceptionHandler(Exception e, Context context) {
+        var body = new Gson().toJson(Map.of("message", String.format("Error: %s", e.getMessage()), "success", false));
+        context.status(500);
+        context.json(body);
     }
 
     // clear handler
