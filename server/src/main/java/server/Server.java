@@ -2,27 +2,32 @@ package server;
 
 import java.util.Map;
 
-import com.google.gson.Gson;
-
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.json.JavalinGson;
+import request.RegisterRequest;
+import response.RegisterResult;
 
 public class Server {
 
     private final Javalin javalin;
 
     public Server() {
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+            // Gson gson = new GsonBuilder().create();
+            config.jsonMapper(new JavalinGson());
+        });
 
         // Register your endpoints and exception handlers here.
 
         // user endpoints
         javalin.post("/user", this::register);
-        javalin.post("/user", this::login);
-        javalin.delete("/user", this::logout);
+        javalin.post("/session", this::login);
+        javalin.delete("/session", this::logout);
 
         // game endpoints
         javalin.get("/game", this::listGames);
@@ -47,7 +52,7 @@ public class Server {
 
     // exception handler
     private void exceptionHandler(Exception e, Context context) {
-        var body = new Gson().toJson(Map.of("message", String.format("Error: %s", e.getMessage()), "success", false));
+        var body = Map.of("message", String.format("Error: %s", e.getMessage()), "success", false);
         int status = 500;
         if (e instanceof BadRequestException) {
             status = 400;
@@ -83,8 +88,26 @@ public class Server {
         ctx.status(200).json("{\"message\": Login successful}");
     }
 
-    private void register(Context ctx) {
-        ctx.status(200).result("User created");
+    private void register(Context ctx) throws Exception {
+        RegisterRequest req = ctx.bodyAsClass(RegisterRequest.class);
+        
+        if (req.username() == null || req.password() == null || req.email() == null ||
+        req.username().isEmpty() || req.password().isEmpty() || req.email().isEmpty()) {
+            throw new BadRequestException("bad request");
+        }
+
+        if (isUsernameInDatabase(req.username())) {
+            throw new AlreadyTakenException("already taken");
+        }
+
+        String mockAuthToken = java.util.UUID.randomUUID().toString();
+        RegisterResult result = new RegisterResult(req.username(), mockAuthToken);
+
+        ctx.status(200).json(result);
+    }
+
+    private boolean isUsernameInDatabase(String username) {
+        return "Sean".equals(username);
     }
 
     private void logout(Context ctx) {
