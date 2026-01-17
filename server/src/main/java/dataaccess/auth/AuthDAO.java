@@ -1,6 +1,6 @@
-package dataaccess;
+package dataaccess.auth;
 
-public class AuthDAO {
+public interface AuthDAO {
     // create auth Token
     // get auth token
     // delete auth token
