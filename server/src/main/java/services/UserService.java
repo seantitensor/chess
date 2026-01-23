@@ -58,6 +58,11 @@ public class UserService {
         authDAO.deleteAuth(authToken);
     }
 
+    public void clearDB() {
+        userDAO.clear();
+        authDAO.clearAuth();
+    }
+
     public static String generateToken() {
         return UUID.randomUUID().toString();
     }

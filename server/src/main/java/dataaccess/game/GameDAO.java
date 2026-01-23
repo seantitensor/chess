@@ -6,4 +6,5 @@ public interface GameDAO {
     //get one game
     //create game
     //clear games
+    void clear();
 }

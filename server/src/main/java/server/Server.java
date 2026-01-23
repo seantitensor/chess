@@ -82,8 +82,10 @@ public class Server {
     }
 
     // clear handler
-    private void clear(Context ctx) {
-        ctx.status(200).json("{\"message\": cleared application succesfully}");
+    private void clear(Context ctx) throws Exception {
+        userService.clearDB();
+        gameService.clearDB();
+        ctx.status(200).json(Map.of());
     }
 
     //game handler
