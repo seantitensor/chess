@@ -1,5 +1,7 @@
 package services;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 import chess.ChessGame;
@@ -11,6 +13,7 @@ import exceptions.UnauthorizedException;
 import model.AuthData;
 import model.GameData;
 import request.JoinGameRequest;
+import response.ListGameResult;
 import response.ListResult;
 import response.NewGameResult;
 
@@ -27,7 +30,8 @@ public class GameService {
         if (authDAO.getAuthData(authToken) == null) {
             throw new UnauthorizedException("Unauthorized ");
         }
-        return new ListResult(gameDAO.getGames());
+
+        return new ListResult(dropGame(gameDAO.getGames()));
     }
 
     public void joinGame(String authToken, JoinGameRequest req){
@@ -67,5 +71,13 @@ public class GameService {
 
     public void clearDB() {
         gameDAO.clear();
+    }
+
+    private Collection<ListGameResult> dropGame(Collection<GameData> games) {
+        Collection<ListGameResult> res = new ArrayList<>();
+        for (GameData game : games) {
+            res.add(new ListGameResult(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName()));
+        }
+        return res;
     }
 }

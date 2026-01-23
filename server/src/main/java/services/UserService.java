@@ -5,7 +5,6 @@ import java.util.UUID;
 import dataaccess.auth.AuthDAO;
 import dataaccess.user.UserDAO;
 import exceptions.AlreadyTakenException;
-import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
 import model.UserData;
 import request.LoginRequest;
@@ -41,7 +40,7 @@ public class UserService {
     public LoginResult login(LoginRequest request) {
         UserData user = userDAO.getUser(request.username());
         if (user == null) {
-            throw new BadRequestException("No user with that username");
+            throw new UnauthorizedException("No user with that username");
         }
         if (!user.password().equals(request.password())) {
             throw new UnauthorizedException("Password is incorect");
