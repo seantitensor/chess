@@ -22,7 +22,7 @@ public class UserService {
         this.authDAO = authDAO;
     }
 
-    public RegisterResult register(RegisterRequest request) throws Exception {
+    public RegisterResult register(RegisterRequest request) {
         //check to see if username is already taken
         if (userDAO.getUser(request.username()) != null) {
             throw new AlreadyTakenException("Username already taken.");
@@ -38,7 +38,7 @@ public class UserService {
     }
 
 
-    public LoginResult login(LoginRequest request) throws Exception {
+    public LoginResult login(LoginRequest request) {
         UserData user = userDAO.getUser(request.username());
         if (user == null) {
             throw new BadRequestException("No user with that username");
@@ -51,7 +51,7 @@ public class UserService {
         return new LoginResult(request.username(), authToken);
     }
     
-    public void logout(String authToken) throws Exception {
+    public void logout(String authToken) {
         if (authDAO.getAuthData(authToken) == null) {
             throw new UnauthorizedException("Unauthorized ");
         }

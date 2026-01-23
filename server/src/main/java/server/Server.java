@@ -14,10 +14,14 @@ import exceptions.UnauthorizedException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.json.JavalinGson;
+import request.CreateGameRequest;
+import request.JoinGameRequest;
 import request.LoginRequest;
 import request.RegisterRequest;
 import response.LoginResult;
+import response.NewGameResult;
 import response.RegisterResult;
+import response.ListResult;
 import services.GameService;
 import services.UserService;
 
@@ -28,7 +32,7 @@ public class Server {
     private final UserDAO userDAO = new LocalUserDAO();
     private final AuthDAO authDAO = new LocalAuthDAO();
 
-    private final GameService gameService = new GameService(gameDAO);
+    private final GameService gameService = new GameService(gameDAO, authDAO);
     private final UserService userService = new UserService(userDAO, authDAO);
 
     public Server() {
@@ -89,16 +93,33 @@ public class Server {
     }
 
     //game handler
-    private void listGames(Context ctx) {
-        ctx.status(200).json("{\"message\": found games}");
+    private void listGames(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
+        ListResult result = gameService.getListGames(authToken);
+        ctx.status(200).json(result);
     }
 
-    private void createGame(Context ctx) {
-        ctx.status(200).result("game Created");
+    private void createGame(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
+        CreateGameRequest req = ctx.bodyAsClass(CreateGameRequest.class);
+        if (req.gameName() == null) {
+            throw new BadRequestException("bad request");
+        }
+
+        NewGameResult result = gameService.createGame(authToken, req.gameName());
+        ctx.status(200).json(result);
     }
 
-    private void joinGame(Context ctx) {
-        ctx.status(200).result("game joined sucesfully");
+    private void joinGame(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
+        JoinGameRequest req = ctx.bodyAsClass(JoinGameRequest.class);
+
+        if (req.playerColor() == null || req.gameID() == null) {
+            throw new BadRequestException("bad request");
+        }
+
+        gameService.joinGame(authToken,req);
+        ctx.status(200).json(Map.of());
     }
 
     //user handler
