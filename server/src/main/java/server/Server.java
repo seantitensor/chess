@@ -2,18 +2,34 @@ package server;
 
 import java.util.Map;
 
+import dataaccess.auth.AuthDAO;
+import dataaccess.auth.LocalAuthDAO;
+import dataaccess.game.GameDAO;
+import dataaccess.game.LocalGameDAO;
+import dataaccess.user.LocalUserDAO;
+import dataaccess.user.UserDAO;
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.json.JavalinGson;
+import request.LoginRequest;
 import request.RegisterRequest;
+import response.LoginResult;
 import response.RegisterResult;
+import services.GameService;
+import services.UserService;
 
 public class Server {
 
     private final Javalin javalin;
+    private final GameDAO gameDAO = new LocalGameDAO(); 
+    private final UserDAO userDAO = new LocalUserDAO();
+    private final AuthDAO authDAO = new LocalAuthDAO();
+
+    private final GameService gameService = new GameService(gameDAO);
+    private final UserService userService = new UserService(userDAO, authDAO);
 
     public Server() {
         javalin = Javalin.create(config -> {
@@ -84,8 +100,15 @@ public class Server {
     }
 
     //user handler
-    private void login(Context ctx) {
-        ctx.status(200).json("{\"message\": Login successful}");
+    private void login(Context ctx) throws Exception {
+        LoginRequest req = ctx.bodyAsClass(LoginRequest.class);
+
+        if (req.username() == null || req.password() == null) {
+            throw new BadRequestException("bad request");
+        }
+
+        LoginResult result = userService.login(req);
+        ctx.status(200).json(result);
     }
 
     private void register(Context ctx) throws Exception {
@@ -96,21 +119,13 @@ public class Server {
             throw new BadRequestException("bad request");
         }
 
-        if (isUsernameInDatabase(req.username())) {
-            throw new AlreadyTakenException("already taken");
-        }
-
-        String mockAuthToken = java.util.UUID.randomUUID().toString();
-        RegisterResult result = new RegisterResult(req.username(), mockAuthToken);
-
+        RegisterResult result = userService.register(req);
         ctx.status(200).json(result);
     }
 
-    private boolean isUsernameInDatabase(String username) {
-        return "Sean".equals(username);
-    }
-
-    private void logout(Context ctx) {
-        ctx.status(200).result("Logout succesful");
+    private void logout(Context ctx) throws Exception {
+        String authToken = ctx.header("authorization");
+        userService.logout(authToken);        
+        ctx.status(200).json(Map.of());
     }
 }

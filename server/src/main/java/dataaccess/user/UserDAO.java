@@ -9,7 +9,7 @@ public interface UserDAO {
 
     //login
     UserData getUser(String username) throws DataAccessException;
-    
+
     //clear
     void clear();
 }
