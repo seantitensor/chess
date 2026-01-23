@@ -11,7 +11,7 @@ public class LocalAuthDAO implements AuthDAO {
 
     @Override
     public void createAuth(String authToken, String username) throws DataAccessException {
-        authDatas.put(authToken, new AuthData(username, authToken));
+        authDatas.put(authToken, new AuthData(authToken, username));
     }
 
     @Override
