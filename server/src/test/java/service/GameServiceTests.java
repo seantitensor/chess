@@ -5,14 +5,25 @@
 
 package service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import chess.ChessGame;
 import dataaccess.auth.AuthDAO;
 import dataaccess.auth.LocalAuthDAO;
 import dataaccess.game.GameDAO;
 import dataaccess.game.LocalGameDAO;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
+import request.JoinGameRequest;
+import response.ListResult;
+import response.NewGameResult;
 import services.GameService;
  
 /**
@@ -26,8 +37,7 @@ public class GameServiceTests {
     private AuthDAO authDAO;
     private String authToken;
 
-     public GameServiceTests() {
-    }
+    public GameServiceTests() {}
 
     @BeforeEach
     public void setup() {
@@ -39,52 +49,71 @@ public class GameServiceTests {
     }
 
     @Test
-    @DisplayName("create a Good Game")
+    @DisplayName("postive: create a Good Game")
     public void createGoodGame() {
-
+        assertDoesNotThrow(() -> {
+        NewGameResult result = gameService.createGame(authToken, "game_name");
+        assertNotNull(result.gameID());
+    });
     }
 
     @Test
-    @DisplayName("create a bad Game")
+    @DisplayName("negative: create a bad Game")
     public void createBadGame() {
-
+        assertThrows(UnauthorizedException.class, () -> gameService.createGame("fjdakfjdfdaf", "games"));
     }
 
     @Test
-    @DisplayName("get empty list games")
-    public void getEmptyList() {
-
+    @DisplayName("postive: get list games")
+    public void getList() {
+        gameService.createGame(authToken, "game_name");
+        gameService.createGame(authToken, "game_name1");
+        gameService.createGame(authToken, "game_name2");
+        assertDoesNotThrow(()-> {
+            ListResult result = gameService.getListGames(authToken);
+            assertEquals(result.games().size(), 3);
+            
+        });
     }
 
     @Test
-    @DisplayName("get list games")
+    @DisplayName("negative: get unauthrozed list games")
     public void getGameList() {
-
+        assertThrows(UnauthorizedException.class, () -> gameService.getListGames("bad_auth"));
     }
 
         @Test
-    @DisplayName("Join valid Game")
+    @DisplayName("positive: Join valid Game")
     public void joinGoodGame() {
-
+        NewGameResult result = gameService.createGame(authToken, "game_name");
+        JoinGameRequest req = new JoinGameRequest(ChessGame.TeamColor.WHITE,result.gameID());
+        assertDoesNotThrow(() -> gameService.joinGame(authToken,req));
     }
 
     @Test
-    @DisplayName("Join invalid Game")
+    @DisplayName("negative: Join invalid Game")
     public void joinBadGame() {
-
+        NewGameResult result = gameService.createGame(authToken, "game_name");
+        JoinGameRequest req = new JoinGameRequest(ChessGame.TeamColor.WHITE, result.gameID());
+        gameService.joinGame(authToken,req);
+        assertThrows(AlreadyTakenException.class, () -> gameService.joinGame(authToken, req));
     }
 
     @Test
     @DisplayName("ClearDB")
     public void clearGameDB() {
-
+        gameService.createGame(authToken, "game_name");
+        gameService.createGame(authToken, "game_name1");
+        gameService.createGame(authToken, "game_name2");
+        assertDoesNotThrow(()->gameService.clearDB());
     }
 
     @Test
     @DisplayName("ClearDB but for bad user")
     public void clearBadGameDB() {
-
+        NewGameResult result = gameService.createGame(authToken, "game_name");
+        JoinGameRequest req = new JoinGameRequest(ChessGame.TeamColor.WHITE,result.gameID());
+        assertDoesNotThrow(()->gameService.clearDB());
+        assertThrows(BadRequestException.class, () -> gameService.joinGame(authToken, req));
     }
-
-
 }
