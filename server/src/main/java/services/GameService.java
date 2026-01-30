@@ -30,7 +30,6 @@ public class GameService {
         if (authDAO.getAuthData(authToken) == null) {
             throw new UnauthorizedException("Unauthorized ");
         }
-
         return new ListResult(dropGame(gameDAO.getGames()));
     }
 
@@ -46,7 +45,10 @@ public class GameService {
             throw new BadRequestException("No game with that ID");
         }
 
-        if (((req.playerColor() == ChessGame.TeamColor.BLACK) && (game.blackUsername() != null)) || ((req.playerColor() == ChessGame.TeamColor.WHITE) && (game.whiteUsername() != null))) {
+        String username = (req.playerColor() == ChessGame.TeamColor.BLACK) 
+                                                    ? game.blackUsername() 
+                                                    : game.whiteUsername();
+        if ( username != null) {
                 throw new AlreadyTakenException("Color is already Taken");
         }
 
