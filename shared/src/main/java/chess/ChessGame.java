@@ -289,8 +289,9 @@ public class ChessGame {
         }
         ChessGame other = (ChessGame) obj;
         if (board == null) {
-            if (other.board != null)
+            if (other.board != null){
                 return false;
+            }
         } else if (!board.equals(other.board)){
             return false;
         }
