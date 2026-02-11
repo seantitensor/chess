@@ -3,6 +3,7 @@ package dataaccess.game;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import dataaccess.DataAccessException;
 import model.GameData;
@@ -16,8 +17,10 @@ public class LocalGameDAO implements GameDAO{
     }
 
     @Override
-    public void createGame(GameData game) throws DataAccessException {
-        games.put(game.gameID(), game);
+    public int createGame(GameData game) throws DataAccessException {
+        int gameID = Math.abs(UUID.randomUUID().hashCode());
+        games.put(gameID, game);
+        return gameID;
     }
 
     @Override

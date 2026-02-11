@@ -2,7 +2,6 @@ package services;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 
 import chess.ChessGame;
 import dataaccess.auth.AuthDAO;
@@ -65,9 +64,8 @@ public class GameService {
         if (authDAO.getAuthData(authToken) == null) {
             throw new UnauthorizedException("Unauthorized ");
         }
-        int gameID = Math.abs(UUID.randomUUID().hashCode());
-        GameData game = new GameData(gameID, null,null, gameName, new ChessGame());
-        gameDAO.createGame(game);
+        GameData game = new GameData(0,null,null, gameName, new ChessGame());
+        int gameID = gameDAO.createGame(game);
         return new NewGameResult(gameID);
     }
 

@@ -15,10 +15,10 @@ public class SqlAuthDAO extends SqlDAO implements AuthDAO {
   
     @Override
     public void createAuth(String authToken, String username) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
+        var statement = "INSERT INTO auths (authToken, username) VALUES (?, ?)";
+        try {
             executeUpdate(statement, authToken, username);
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
             throw new DataAccessException("error executing createAuth: " + e.getMessage());
         }
     }
@@ -43,10 +43,10 @@ public class SqlAuthDAO extends SqlDAO implements AuthDAO {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
-            var statement = "DELETE FROM auths WHERE authToken = ?";
+        var statement = "DELETE FROM auths WHERE authToken = ?";
+        try {
             executeUpdate(statement, authToken);
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
             throw new DataAccessException("couldn't connect to the db");
         }
     }

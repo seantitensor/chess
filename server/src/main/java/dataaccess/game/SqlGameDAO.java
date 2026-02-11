@@ -20,17 +20,17 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "UPDATE games SET gameName = ?, whiteUsername = ?, blackUsername = ?, game = ? WHERE gameID = ?";
+        var statement = "UPDATE games SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ? WHERE gameID = ?";
+        try {
             executeUpdate(
                 statement,
-                game.gameName(),
                 game.whiteUsername(),
                 game.blackUsername(),
+                game.gameName(),
                 gson.toJson(game.game()),
                 game.gameID()
             );
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             throw new DataAccessException("couldn't connect to the db");
         }
     }
@@ -39,16 +39,16 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
     public Collection<GameData> getGames() throws DataAccessException {
         var games = new ArrayList<GameData>();
         try (Connection conn = DatabaseManager.getConnection()) { 
-            var statement = "SELECT gameID, gameName, whiteUsername, blackUsername, game FROM games";
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM games";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
                         var gameObj = gson.fromJson(rs.getString("game"), ChessGame.class);
                         games.add(new GameData(
                             rs.getInt("gameID"),
-                            rs.getString("gameName"),
                             rs.getString("whiteUsername"),
                             rs.getString("blackUsername"),
+                            rs.getString("gameName"),
                             gameObj
                         ));
                     }
@@ -63,7 +63,7 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT gameID, gameName, whiteUsername, blackUsername, game FROM games WHERE gameID = ?";  
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM games WHERE gameID = ?";  
              try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameID);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -71,9 +71,9 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
                         var gameObj = gson.fromJson(rs.getString("game"), ChessGame.class);
                         return new GameData(
                             rs.getInt("gameID"),
-                            rs.getString("gameName"),
                             rs.getString("whiteUsername"),
                             rs.getString("blackUsername"),
+                            rs.getString("gameName"),
                             gameObj
                         );
                     }
@@ -86,18 +86,18 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
     }
 
     @Override
-    public void createGame(GameData game) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "INSERT INTO games (gameID, gameName, whiteUsername, blackUsername, game) VALUES (?, ?, ?, ?, ?)";
-            executeUpdate(
+    public int createGame(GameData game) throws DataAccessException {
+        var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
+        var gameObj = gson.toJson(game.game());
+        try {
+            return executeUpdate(
                 statement,
-                game.gameID(),
-                game.gameName(),
                 game.whiteUsername(),
                 game.blackUsername(),
-                gson.toJson(game.game())
+                game.gameName(),
+                gameObj
             );
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             throw new DataAccessException("couldn't connect to the db");
         }
     }
@@ -107,5 +107,4 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
         var statement = "TRUNCATE games";
         executeUpdate(statement);        
     }
-    
 }

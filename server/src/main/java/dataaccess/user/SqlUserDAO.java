@@ -13,10 +13,10 @@ public class SqlUserDAO extends SqlDAO implements UserDAO {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "INSERT INTO users username, password, email VALUES (?, ?, ?)";
+        var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        try {
             executeUpdate(statement, user.username(), user.password(), user.email());
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             throw new DataAccessException("couldn't connect to the db");
         }
     }
