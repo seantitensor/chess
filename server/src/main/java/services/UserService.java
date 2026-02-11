@@ -2,6 +2,8 @@ package services;
 
 import java.util.UUID;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import dataaccess.auth.AuthDAO;
 import dataaccess.user.UserDAO;
 import exceptions.AlreadyTakenException;
@@ -26,8 +28,9 @@ public class UserService {
         if (userDAO.getUser(request.username()) != null) {
             throw new AlreadyTakenException("Username already taken.");
         }
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
 
-        UserData newUser = new UserData(request.username(), request.password(), request.email());
+        UserData newUser = new UserData(request.username(), hashedPassword, request.email());
         userDAO.createUser(newUser);
 
         String token = generateToken();
@@ -42,9 +45,10 @@ public class UserService {
         if (user == null) {
             throw new UnauthorizedException("No user with that username");
         }
-        if (!user.password().equals(request.password())) {
-            throw new UnauthorizedException("Password is incorect");
+        if (!BCrypt.checkpw(request.password(), user.password())) {
+            throw new UnauthorizedException("Password is incorrect");
         }
+
         String authToken = generateToken();
         authDAO.createAuth(authToken, request.username());
         return new LoginResult(request.username(), authToken);
