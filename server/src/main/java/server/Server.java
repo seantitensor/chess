@@ -2,12 +2,13 @@ package server;
 
 import java.util.Map;
 
+import dataaccess.DatabaseManager;
 import dataaccess.auth.AuthDAO;
-import dataaccess.auth.LocalAuthDAO;
+import dataaccess.auth.SqlAuthDAO;
 import dataaccess.game.GameDAO;
-import dataaccess.game.LocalGameDAO;
-import dataaccess.user.LocalUserDAO;
+import dataaccess.game.SqlGameDAO;
 import dataaccess.user.UserDAO;
+import dataaccess.user.SqlUserDAO;
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
@@ -18,19 +19,20 @@ import request.CreateGameRequest;
 import request.JoinGameRequest;
 import request.LoginRequest;
 import request.RegisterRequest;
+import response.ListResult;
 import response.LoginResult;
 import response.NewGameResult;
 import response.RegisterResult;
-import response.ListResult;
 import services.GameService;
 import services.UserService;
 
 public class Server {
 
     private final Javalin javalin;
-    private final GameDAO gameDAO = new LocalGameDAO(); 
-    private final UserDAO userDAO = new LocalUserDAO();
-    private final AuthDAO authDAO = new LocalAuthDAO();
+    private final DatabaseManager databaseManager = new DatabaseManager();
+    private final GameDAO gameDAO = new SqlGameDAO(); 
+    private final UserDAO userDAO = new SqlUserDAO();
+    private final AuthDAO authDAO = new SqlAuthDAO();
 
     private final GameService gameService = new GameService(gameDAO, authDAO);
     private final UserService userService = new UserService(userDAO, authDAO);
@@ -38,7 +40,6 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> {
             config.staticFiles.add("web");
-            // Gson gson = new GsonBuilder().create();
             config.jsonMapper(new JavalinGson());
         });
 

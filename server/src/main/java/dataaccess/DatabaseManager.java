@@ -18,6 +18,16 @@ public class DatabaseManager {
         loadPropertiesFromResources();
     }
 
+    // configure database
+
+    public DatabaseManager() {
+        try {
+            configureDatabase();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("failed to configure database", e);
+        }
+    }
+
     /**
      * Creates the database if it does not already exist.
      */
@@ -43,7 +53,7 @@ public class DatabaseManager {
      * }
      * </code>
      */
-    static Connection getConnection() throws DataAccessException {
+    public static Connection getConnection() throws DataAccessException {
         try {
             //do not wrap the following line with a try-with-resources
             var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
@@ -76,4 +86,46 @@ public class DatabaseManager {
         var port = Integer.parseInt(props.getProperty("db.port"));
         connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
     }
+
+    private void configureDatabase() throws DataAccessException {
+        createDatabase();
+        try (var conn = getConnection()) {
+            for (var createString : createStrings) {
+                try (var preparedStatement = conn.prepareStatement(createString)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to configure database", ex);
+        }
+    }
+
+
+    private final String[] createStrings = {
+        """
+            CREATE TABLE IF NOT EXISTS `users` (
+                `username` varchar(255) NOT NULL,
+                `password` varchar(255) NOT NULL,
+                `email` varchar(255) NOT NULL,
+                PRIMARY KEY (`username`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """,
+        """
+            CREATE TABLE IF NOT EXISTS `auths` (
+                `authToken` varchar(255) NOT NULL,
+                `username` varchar(255) NOT NULL,
+                PRIMARY KEY (`authToken`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """,
+        """
+            CREATE TABLE IF NOT EXISTS `games` (
+                `gameID` int NOT NULL AUTO_INCREMENT,
+                `whiteUsername` varchar(255),
+                `blackUsername` varchar(255),
+                `gameName` varchar(255) NOT NULL,
+                `game` TEXT DEFAULT NULL,
+                PRIMARY KEY (`gameID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;   
+        """,
+    };
 }
