@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import chess.ChessGame;
 import dataaccess.auth.AuthDAO;
-import dataaccess.auth.LocalAuthDAO;
+import dataaccess.auth.SqlAuthDAO;
 import dataaccess.game.GameDAO;
-import dataaccess.game.LocalGameDAO;
+import dataaccess.game.SqlGameDAO;
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
@@ -41,9 +41,11 @@ public class GameServiceTests {
 
     @BeforeEach
     public void setup() {
-        gameDAO = new LocalGameDAO();
-        authDAO = new LocalAuthDAO();
+        gameDAO = new SqlGameDAO();
+        authDAO = new SqlAuthDAO();
         gameService = new GameService(gameDAO, authDAO);
+        gameDAO.clear();
+        authDAO.clearAuth();
         authToken = "test-token";
         authDAO.createAuth(authToken, "test-user");
     }
