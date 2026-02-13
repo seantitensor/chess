@@ -16,18 +16,17 @@ import model.GameData;
 
 public class SqlGameDAO extends SqlDAO implements GameDAO {
 
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
         var statement = "UPDATE games SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ? WHERE gameID = ?";
         try {
-            executeUpdate(
-                statement,
+            executeUpdate(statement,
                 game.whiteUsername(),
                 game.blackUsername(),
                 game.gameName(),
-                gson.toJson(game.game()),
+                GSON.toJson(game.game()),
                 game.gameID()
             );
         } catch (DataAccessException e) {
@@ -43,7 +42,7 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
-                        var gameObj = gson.fromJson(rs.getString("game"), ChessGame.class);
+                        var gameObj = GSON.fromJson(rs.getString("game"), ChessGame.class);
                         games.add(new GameData(
                             rs.getInt("gameID"),
                             rs.getString("whiteUsername"),
@@ -68,7 +67,7 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
                 ps.setInt(1, gameID);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        var gameObj = gson.fromJson(rs.getString("game"), ChessGame.class);
+                        var gameObj = GSON.fromJson(rs.getString("game"), ChessGame.class);
                         return new GameData(
                             rs.getInt("gameID"),
                             rs.getString("whiteUsername"),
@@ -88,7 +87,7 @@ public class SqlGameDAO extends SqlDAO implements GameDAO {
     @Override
     public int createGame(GameData game) throws DataAccessException {
         var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
-        var gameObj = gson.toJson(game.game());
+        var gameObj = GSON.toJson(game.game());
         try {
             return executeUpdate(
                 statement,

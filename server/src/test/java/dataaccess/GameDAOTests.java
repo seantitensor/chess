@@ -37,10 +37,11 @@ public class GameDAOTests {
     @Test
     @DisplayName("positive create")
     @Order(1)
+
     void positiveCreateGameTest() {
         GameData game = new GameData(0,null,null,"game", null);
         int gameID = dao.createGame(game);
-        assertNotNull(dao.getGame(gameID));
+        assertEquals(1, dao.getGames().size());
     }
 
     @Test
