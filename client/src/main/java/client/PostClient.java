@@ -2,8 +2,10 @@ package client;
 
 import java.util.Arrays;
 
+import chess.ChessGame;
 import exception.ResponseException;
 import request.CreateGameRequest;
+import request.JoinGameRequest;
 
 public class PostClient implements Client {
     private final ServerFacade server;
@@ -27,6 +29,9 @@ public class PostClient implements Client {
                 case "help" -> help();
                 case "quit" -> "quit";
                 case "create" -> create(params);
+                case "join" -> join(params);
+                case "list" -> list();
+                case "observe" -> observe(params);
                 default -> help();
             };
         } catch (ResponseException ex) {
@@ -40,6 +45,27 @@ public class PostClient implements Client {
             return "Game created.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <NAME>");
+    }
+
+    public String join(String... params) throws ResponseException {
+        if (params.length == 2) {
+            server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1]), Integer.valueOf(params[0])));
+            return "Joined game.";
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+    }
+
+    public String observe(String... params) throws ResponseException {
+        if (params.length == 1) {
+            server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
+            return "Observing game.";
+        }
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+    }
+
+    public String list() throws ResponseException {
+        var result = server.listGames(authToken);
+        return result.toString();
     }
 
     @Override
