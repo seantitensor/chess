@@ -26,11 +26,11 @@ public class PostClient implements Client {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-                case "help" -> help();
                 case "quit" -> "quit";
                 case "create" -> create(params);
                 case "join" -> join(params);
                 case "list" -> list();
+                case "logout" -> logout();
                 case "observe" -> observe(params);
                 default -> help();
             };
@@ -49,7 +49,7 @@ public class PostClient implements Client {
 
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
-            server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1]), Integer.valueOf(params[0])));
+            server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
             return "Joined game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
@@ -66,6 +66,12 @@ public class PostClient implements Client {
     public String list() throws ResponseException {
         var result = server.listGames(authToken);
         return result.toString();
+    }
+
+    public String logout() throws ResponseException {
+        server.logout(authToken);
+        authToken = null;
+        return "Logout successful.";
     }
 
     @Override

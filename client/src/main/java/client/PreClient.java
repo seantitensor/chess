@@ -29,7 +29,6 @@ public class PreClient implements Client {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-                case "help" -> help();
                 case "login" -> login(params);
                 case "register" -> register(params);
                 case "quit" -> "quit";

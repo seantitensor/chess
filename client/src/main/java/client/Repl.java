@@ -1,15 +1,12 @@
 package client;
 
-import java.util.Arrays;
 import java.util.Scanner;
-import static ui.EscapeSequences.*;
-import javax.management.Notification;
 
-import org.junit.platform.commons.util.Preconditions;
-
-import chess.ChessGame;
-import chess.ChessPiece;
 import exception.ResponseException;
+import static ui.EscapeSequences.RESET_TEXT_COLOR;
+import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
+import static ui.EscapeSequences.SET_TEXT_COLOR_MAGENTA;
+import static ui.EscapeSequences.SET_TEXT_COLOR_RED;
 
 public class Repl {
     private final PreClient preClient;
@@ -26,9 +23,9 @@ public class Repl {
         Scanner scanner = new Scanner(System.in);
         var result = "";
 
+        System.out.print(SET_TEXT_COLOR_MAGENTA + preClient.help());
         while (!result.equals("quit")) {
             var client = (state == State.SIGNEDOUT) ? preClient : postClient;
-            System.out.print(client.help());
             printPrompt();
             String line = scanner.nextLine();
 
@@ -41,6 +38,7 @@ public class Repl {
                 if (result.equals("Logout successful.")) {
                     state = State.SIGNEDOUT;
                 }
+                
                 System.out.print(SET_TEXT_COLOR_GREEN + result + RESET_TEXT_COLOR);
             } catch (Throwable e) {
                 var msg = e.toString();
@@ -48,11 +46,6 @@ public class Repl {
             }
         }
         System.out.println();
-    }
-    
-    public void notify(Notification notification) {
-        System.out.println(SET_TEXT_COLOR_RED + notification.message() + RESET_TEXT_COLOR);
-        printPrompt();
     }
 
     private void printPrompt() {

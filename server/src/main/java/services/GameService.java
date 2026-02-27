@@ -44,6 +44,10 @@ public class GameService {
             throw new BadRequestException("No game with that ID");
         }
 
+        if (req.playerColor() == null) {
+            return; 
+        }
+
         String username = (req.playerColor() == ChessGame.TeamColor.BLACK) 
                                                     ? game.blackUsername() 
                                                     : game.whiteUsername();
