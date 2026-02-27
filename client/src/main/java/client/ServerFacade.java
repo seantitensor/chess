@@ -11,7 +11,13 @@ import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 
+import org.glassfish.grizzly.http.server.Response;
+
 import request.LoginRequest;
+import request.RegisterRequest;
+import response.ListResult;
+import response.LoginResult;
+import response.RegisterResult;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -21,34 +27,39 @@ public class ServerFacade {
         serverUrl = url;
     }
 
-    public UserData login(LoginRequest req) throws Exception {
-        var request = buildRequest("POST", "/session", UserData);
+    // user methods
+    public LoginResult login(LoginRequest req) throws ResponseException {
+        var request = buildRequest("POST", "/session", null, req);
         var response = sendRequest(request);
-        return handleResponse(response, Pet.class);
+        return handleResponse(response, LoginResult.class);
     }
 
-    public void deletePet(int id) throws ResponseException {
-        var path = String.format("/pet/%s", id);
-        var request = buildRequest("DELETE", path, null);
+    public RegisterResult register(RegisterRequest req) throws ResponseException {
+        var request = buildRequest("POST", "/user", null, req);
+        var response = sendRequest(request);
+        return handleResponse(response, RegisterResult.class);
+    }
+
+    public void logout(String authToken) throws ResponseException {
+        var request = buildRequest("DELETE", "/session", authToken, null);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
 
-    public void deleteAllPets() throws ResponseException {
-        var request = buildRequest("DELETE", "/pet", null);
-        sendRequest(request);
-    }
 
-    public PetList listPets() throws ResponseException {
-        var request = buildRequest("GET", "/pet", null);
+    public PetList listGames() throws ResponseException {
+        var request = buildRequest("GET", "/game", null);
         var response = sendRequest(request);
-        return handleResponse(response, PetList.class);
+        return handleResponse(response, ListResult.class);
     }
 
-    private HttpRequest buildRequest(String method, String path, Object body) {
+    private HttpRequest buildRequest(String method, String path, String authToken, Object body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
                 .method(method, makeRequestBody(body));
+        if (authToken != null) {
+            request.setHeader("authorization", authToken);
+        }
         if (body != null) {
             request.setHeader("Content-Type", "application/json");
         }
