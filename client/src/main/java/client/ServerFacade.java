@@ -1,22 +1,23 @@
 package client;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
+
 import com.google.gson.Gson;
 
 import exception.ResponseException;
-import model.*;
-
-import java.net.*;
-import java.net.http.*;
-import java.net.http.HttpRequest.BodyPublisher;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse.BodyHandlers;
-
-import org.glassfish.grizzly.http.server.Response;
-
+import request.CreateGameRequest;
+import request.JoinGameRequest;
 import request.LoginRequest;
 import request.RegisterRequest;
 import response.ListResult;
 import response.LoginResult;
+import response.NewGameResult;
 import response.RegisterResult;
 
 public class ServerFacade {
@@ -46,12 +47,26 @@ public class ServerFacade {
         handleResponse(response, null);
     }
 
-
-    public PetList listGames() throws ResponseException {
-        var request = buildRequest("GET", "/game", null);
+    // game methods
+    public ListResult listGames(String authToken) throws ResponseException {
+        var request = buildRequest("GET", "/game", authToken, null);
         var response = sendRequest(request);
         return handleResponse(response, ListResult.class);
     }
+
+    public NewGameResult createGame(String authToken, CreateGameRequest req) throws ResponseException {
+        var request = buildRequest("POST", "/game", authToken, req);
+        var response = sendRequest(request);
+        return handleResponse(response, NewGameResult.class);
+    }
+
+    public void joinGame(String authToken, JoinGameRequest req) throws ResponseException {
+        var request = buildRequest("POST", "/game/join", authToken, req);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
+
+    
 
     private HttpRequest buildRequest(String method, String path, String authToken, Object body) {
         var request = HttpRequest.newBuilder()
