@@ -6,6 +6,7 @@ import chess.ChessGame;
 import exception.ResponseException;
 import request.CreateGameRequest;
 import request.JoinGameRequest;
+import ui.Board;
 
 public class PostClient implements Client {
     private final ServerFacade server;
@@ -50,6 +51,7 @@ public class PostClient implements Client {
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
             server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
+            Board.drawBoard(System.out);
             return "Joined game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
@@ -58,6 +60,7 @@ public class PostClient implements Client {
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
             server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
+            Board.drawBoard(System.out);
             return "Observing game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");

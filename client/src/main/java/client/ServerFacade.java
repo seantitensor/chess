@@ -67,10 +67,8 @@ public class ServerFacade {
         var response = sendRequest(request);
         handleResponse(response, null);
     }
-
-
+    
     //clear function
-
     public void clear() throws ResponseException {
         var request = buildRequest("DELETE", "/db", null, null);
         var response = sendRequest(request);
