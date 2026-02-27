@@ -110,7 +110,7 @@ public class ServerFacade {
         var status = response.statusCode();
         if (!isSuccessful(status)) {
             var body = response.body();
-            if (body != null) {
+            if (body != null && !body.isEmpty()) {
                 throw ResponseException.fromJson(body);
             }
 

@@ -7,8 +7,8 @@ import dataaccess.auth.AuthDAO;
 import dataaccess.auth.SqlAuthDAO;
 import dataaccess.game.GameDAO;
 import dataaccess.game.SqlGameDAO;
-import dataaccess.user.UserDAO;
 import dataaccess.user.SqlUserDAO;
+import dataaccess.user.UserDAO;
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
@@ -39,9 +39,12 @@ public class Server {
 
     public Server() {
         javalin = Javalin.create(config -> {
+            config.bundledPlugins.enableDevLogging();
             config.staticFiles.add("web");
             config.jsonMapper(new JavalinGson());
         });
+
+        javalin.before(ctx -> System.out.println("Inbound Request: " + ctx.method() + " " + ctx.path()));
 
         // Register your endpoints and exception handlers here.
 
@@ -136,10 +139,12 @@ public class Server {
     }
 
     private void register(Context ctx) throws Exception {
+        System.out.println("DEBUG: Received request body: " + ctx.body()); // See the raw JSON
         RegisterRequest req = ctx.bodyAsClass(RegisterRequest.class);
         
         if (req.username() == null || req.password() == null || req.email() == null ||
         req.username().isEmpty() || req.password().isEmpty() || req.email().isEmpty()) {
+            System.out.println("DEBUG: Validation failed, throwing BadRequest");
             throw new BadRequestException("bad request");
         }
 
