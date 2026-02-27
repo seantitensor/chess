@@ -28,6 +28,8 @@ public class ServerFacade {
         serverUrl = url;
     }
 
+    private final Gson gson = new Gson();
+
     // user methods
     public LoginResult login(LoginRequest req) throws ResponseException {
         var request = buildRequest("POST", "/session", null, req);
@@ -61,7 +63,7 @@ public class ServerFacade {
     }
 
     public void joinGame(String authToken, JoinGameRequest req) throws ResponseException {
-        var request = buildRequest("POST", "/game", authToken, req);
+        var request = buildRequest("PUT", "/game", authToken, req);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
@@ -90,7 +92,7 @@ public class ServerFacade {
 
     private BodyPublisher makeRequestBody(Object request) {
         if (request != null) {
-            return BodyPublishers.ofString(new Gson().toJson(request));
+            return BodyPublishers.ofString(gson.toJson(request));
         } else {
             return BodyPublishers.noBody();
         }
@@ -116,7 +118,7 @@ public class ServerFacade {
         }
 
         if (responseClass != null) {
-            return new Gson().fromJson(response.body(), responseClass);
+            return gson.fromJson(response.body(), responseClass);
         }
 
         return null;
