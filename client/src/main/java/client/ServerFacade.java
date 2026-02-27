@@ -61,12 +61,19 @@ public class ServerFacade {
     }
 
     public void joinGame(String authToken, JoinGameRequest req) throws ResponseException {
-        var request = buildRequest("POST", "/game/join", authToken, req);
+        var request = buildRequest("POST", "/game", authToken, req);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
 
-    
+
+    //clear function
+
+    public void clear() throws ResponseException {
+        var request = buildRequest("DELETE", "/db", null, null);
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
 
     private HttpRequest buildRequest(String method, String path, String authToken, Object body) {
         var request = HttpRequest.newBuilder()
