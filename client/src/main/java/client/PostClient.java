@@ -6,6 +6,7 @@ import chess.ChessGame;
 import exception.ResponseException;
 import request.CreateGameRequest;
 import request.JoinGameRequest;
+import response.ListGameResult;
 import ui.Board;
 
 public class PostClient implements Client {
@@ -51,7 +52,7 @@ public class PostClient implements Client {
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
             server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
-            Board.drawBoard(System.out);
+            Board.drawBoard(System.out, (params[1].toUpperCase().equals("WHITE")));
             return "Joined game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
@@ -60,7 +61,7 @@ public class PostClient implements Client {
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
             server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
-            Board.drawBoard(System.out);
+            Board.drawBoard(System.out, true);
             return "Observing game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
@@ -68,7 +69,22 @@ public class PostClient implements Client {
 
     public String list() throws ResponseException {
         var result = server.listGames(authToken);
-        return result.toString();
+        var games = result.games();
+        if (games == null || games.isEmpty()) {
+            return "no games available";
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 1;
+        for (ListGameResult game : games) {
+            stringBuilder.append(String.format("%d. ID: %d Game Name: %s (White: %s, Black: %s)\n", 
+                i++,
+                game.gameID(),
+                game.gameName(), 
+                game.whiteUsername() != null ? game.whiteUsername() : "Empty", 
+                game.blackUsername() != null ? game.blackUsername() : "Empty"
+            ));
+        }
+        return stringBuilder.toString();
     }
 
     public String logout() throws ResponseException {

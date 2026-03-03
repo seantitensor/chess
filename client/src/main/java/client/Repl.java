@@ -26,7 +26,7 @@ public class Repl {
         System.out.print(SET_TEXT_COLOR_MAGENTA + preClient.help());
         while (!result.equals("quit")) {
             var client = (state == State.SIGNEDOUT) ? preClient : postClient;
-            printPrompt();
+            printPrompt(state);
             String line = scanner.nextLine();
 
             try {
@@ -48,7 +48,7 @@ public class Repl {
         System.out.println();
     }
 
-    private void printPrompt() {
-        System.out.print("\n" + RESET_TEXT_COLOR + ">>> " + SET_TEXT_COLOR_GREEN);
+    private void printPrompt(State state) {
+        System.out.print("\n" + RESET_TEXT_COLOR + "[" + state + "] >>> " + SET_TEXT_COLOR_GREEN);
     }
 }

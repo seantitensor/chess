@@ -1,6 +1,7 @@
 package ui;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import chess.ChessBoard;
 import chess.ChessGame;
@@ -28,13 +29,14 @@ public class Board {
     // Board dimensions.
     private static final int BOARD_SIZE_IN_SQUARES = 8;
 
-    public static void drawHeaders(PrintStream out) {
+    public static void drawHeaders(PrintStream out, boolean  isWhite) {
         out.print(SET_BG_COLOR_MAGENTA);
         out.print(SET_TEXT_COLOR_YELLOW);
         String[] headers = {"a", "b", "c", "d", "e", "f", "g", "h"};
         out.print(" ");
         out.print(EMPTY);
-        for (String h: headers) {
+        var header = Arrays.asList(headers);
+        for (String h: isWhite == true ? header : header.reversed()) {
             out.print(" ");
             out.print(h);
             out.print(" ");
@@ -45,15 +47,21 @@ public class Board {
         out.println();
     }
 
-    public static void drawBoard(PrintStream out) {
+    public static void drawBoard(PrintStream out, boolean isWhite) {
         ChessBoard board = new ChessBoard();
         board.resetBoard();
-        drawHeaders(out);
 
-        for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
-            drawRow(out,boardRow, board);
+        drawHeaders(out, isWhite);
+        if (isWhite == false) {
+            for (int boardRow = 1 ; boardRow <= BOARD_SIZE_IN_SQUARES ; ++boardRow) {
+                drawRow(out,boardRow, board);
+            }
+        } else {
+            for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
+                drawRow(out,boardRow, board);
+            }
         }
-        drawHeaders(out);
+        drawHeaders(out, isWhite);
         out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
