@@ -3,16 +3,19 @@ package client;
 import java.util.Arrays;
 
 import client.websocket.NotificationHandler;
+import client.websocket.WebsocketFacade;
 import exception.ResponseException;
 import websocket.messages.ServerMessage;
 
 public class GameClient implements Client, NotificationHandler {
 
     private final ServerFacade server;
+    private final WebsocketFacade ws;
     private String authToken;
 
     public GameClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
+        ws = new WebsocketFacade(serverUrl, this);
     }
 
     public void setAuthToken(String authToken) {
@@ -78,7 +81,6 @@ public class GameClient implements Client, NotificationHandler {
             }
         }
     }
-
 
 
     @Override
