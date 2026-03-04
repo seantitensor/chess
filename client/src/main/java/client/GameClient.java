@@ -66,11 +66,11 @@ public class GameClient implements Client {
     @Override
     public String help() {
         return """
-                - create <NAME>  - create a game
-                - list - list all games
-                - join <ID> [WHITE|BLACK] - join a game
-                - observe <ID> - observe a game
-                - logout
+                - moves <SQUARE>  - view moves for a given piece
+                - move <SQUARE> <SQUARE> - move piece from one spot to another
+                - leave - leave the game
+                - resign - resign the game
+                - redraw - redraw the game board
                 - quit
                 - help
                 """;
