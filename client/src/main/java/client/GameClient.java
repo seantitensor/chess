@@ -39,9 +39,7 @@ public class GameClient implements Client {
 
     public String moves(String... params) throws ResponseException {
         return "";
-
     }
-
 
     public String move(String... params) throws ResponseException {
         return "";
@@ -49,12 +47,11 @@ public class GameClient implements Client {
     }
 
     public String leave() throws ResponseException {
-        return "";
-
+        return "Left the match.";
     }
 
     public String resign() throws ResponseException {
-        return "";
+        return "Resigned.";
 
     }
 

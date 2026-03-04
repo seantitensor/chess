@@ -50,6 +50,10 @@ public class Repl {
                     gameClient.setAuthToken(preClient.getAuthToken());
                     state = State.INGAME;
                 }
+
+                if (result.equals("Left the match.") || result.equals("Resigned.")) {
+                    state = State.SIGNEDIN;
+                }
                 
                 System.out.print(SET_TEXT_COLOR_GREEN + result + RESET_TEXT_COLOR);
             } catch (Throwable e) {
