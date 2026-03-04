@@ -2,9 +2,11 @@ package client;
 
 import java.util.Arrays;
 
+import client.websocket.NotificationHandler;
 import exception.ResponseException;
+import websocket.messages.ServerMessage;
 
-public class GameClient implements Client {
+public class GameClient implements Client, NotificationHandler {
 
     private final ServerFacade server;
     private String authToken;
@@ -58,6 +60,25 @@ public class GameClient implements Client {
     public String redraw() throws ResponseException {
         return "";
     }
+
+    @Override
+    public void notify(ServerMessage serverMessage) {
+        switch(serverMessage.getServerMessageType()) {
+            case LOAD_GAME -> {
+                System.out.println(PINK + serverMessage.message());
+                printPrompt();
+            }
+            case ERROR -> {
+                System.out.println(RED + notification.message());
+                printPrompt();
+            }
+            case NOTIFICATION -> {
+                System.out.println(BLUE + notification.message());
+                printPrompt();
+            }
+        }
+    }
+
 
 
     @Override
