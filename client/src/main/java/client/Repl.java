@@ -11,11 +11,13 @@ import static ui.EscapeSequences.SET_TEXT_COLOR_RED;
 public class Repl {
     private final PreClient preClient;
     private final PostClient postClient;
+    private final GameClient gameClient;
     private State state = State.SIGNEDOUT;
 
     public Repl(String serverUrl) throws ResponseException {
         this.preClient = new PreClient(serverUrl);
         this.postClient = new PostClient(serverUrl);
+        this.gameClient = new GameClient(serverUrl);
     }
 
     public void run() {
@@ -27,8 +29,10 @@ public class Repl {
         while (!result.equals("quit")) {
             var client = switch(state){
                 case SIGNEDOUT -> preClient;
-                case SIGNEDIN, INGAME -> postClient;
-            }
+                case SIGNEDIN -> postClient;
+                case INGAME -> gameClient;
+            };
+
             printPrompt(state);
             String line = scanner.nextLine();
 
@@ -40,6 +44,11 @@ public class Repl {
                 }
                 if (result.equals("Logout successful.")) {
                     state = State.SIGNEDOUT;
+                }
+
+                if (result.equals("Joined game.") || result.equals("Observing game.")) {
+                    gameClient.setAuthToken(preClient.getAuthToken());
+                    state = State.INGAME;
                 }
                 
                 System.out.print(SET_TEXT_COLOR_GREEN + result + RESET_TEXT_COLOR);

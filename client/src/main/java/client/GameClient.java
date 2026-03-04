@@ -5,6 +5,18 @@ import java.util.Arrays;
 import exception.ResponseException;
 
 public class GameClient implements Client {
+
+    private final ServerFacade server;
+    private String authToken;
+
+    public GameClient(String serverUrl) throws ResponseException {
+        server = new ServerFacade(serverUrl);
+    }
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+
     @Override
     public String eval(String input) {
         try {
