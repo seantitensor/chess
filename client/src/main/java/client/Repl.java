@@ -25,7 +25,10 @@ public class Repl {
 
         System.out.print(SET_TEXT_COLOR_MAGENTA + preClient.help());
         while (!result.equals("quit")) {
-            var client = (state == State.SIGNEDOUT) ? preClient : postClient;
+            var client = switch(state){
+                case SIGNEDOUT -> preClient;
+                case SIGNEDIN, INGAME -> postClient;
+            }
             printPrompt(state);
             String line = scanner.nextLine();
 
