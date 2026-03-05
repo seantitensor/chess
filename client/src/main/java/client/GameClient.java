@@ -5,17 +5,25 @@ import java.util.Arrays;
 import client.websocket.NotificationHandler;
 import client.websocket.WebsocketFacade;
 import exception.ResponseException;
+import static ui.EscapeSequences.RESET_TEXT_COLOR;
+import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
+import static ui.EscapeSequences.SET_TEXT_COLOR_MAGENTA;
+import static ui.EscapeSequences.SET_TEXT_COLOR_RED;
 import websocket.messages.ServerMessage;
 
 public class GameClient implements Client, NotificationHandler {
 
     private final ServerFacade server;
-    private final WebsocketFacade ws;
+    private WebsocketFacade ws;
     private String authToken;
 
     public GameClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
-        ws = new WebsocketFacade(serverUrl, this);
+    }
+
+    public void setWebsocketFacade(WebsocketFacade ws) {
+        this.ws = ws;
+        
     }
 
     public void setAuthToken(String authToken) {
@@ -68,20 +76,23 @@ public class GameClient implements Client, NotificationHandler {
     public void notify(ServerMessage serverMessage) {
         switch(serverMessage.getServerMessageType()) {
             case LOAD_GAME -> {
-                System.out.println(PINK + serverMessage.message());
-                printPrompt();
+                System.out.println(SET_TEXT_COLOR_MAGENTA + serverMessage);
+                printPrompt(State.INGAME);
             }
             case ERROR -> {
-                System.out.println(RED + notification.message());
-                printPrompt();
+                System.out.println(SET_TEXT_COLOR_RED + serverMessage);
+                printPrompt(State.INGAME);
             }
             case NOTIFICATION -> {
-                System.out.println(BLUE + notification.message());
-                printPrompt();
+                System.out.println(SET_TEXT_COLOR_GREEN + serverMessage);
+                printPrompt(State.INGAME);
             }
         }
     }
 
+    private void printPrompt(State state) {
+        System.out.print("\n" + RESET_TEXT_COLOR + "[" + state + "] >>> " + SET_TEXT_COLOR_GREEN);
+    }
 
     @Override
     public String help() {

@@ -2,6 +2,7 @@ package client;
 
 import java.util.Scanner;
 
+import client.websocket.WebsocketFacade;
 import exception.ResponseException;
 import static ui.EscapeSequences.RESET_TEXT_COLOR;
 import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
@@ -13,11 +14,13 @@ public class Repl {
     private final PostClient postClient;
     private final GameClient gameClient;
     private State state = State.SIGNEDOUT;
+    private String serverUrl;
 
     public Repl(String serverUrl) throws ResponseException {
         this.preClient = new PreClient(serverUrl);
         this.postClient = new PostClient(serverUrl);
         this.gameClient = new GameClient(serverUrl);
+        this.serverUrl = serverUrl;
     }
 
     public void run() {
@@ -49,6 +52,12 @@ public class Repl {
                 if (result.equals("Joined game.") || result.equals("Observing game.")) {
                     gameClient.setAuthToken(preClient.getAuthToken());
                     state = State.INGAME;
+                    try {
+                        var ws = new WebsocketFacade(serverUrl, gameClient);
+                        gameClient.setWebsocketFacade(ws);
+                    } catch (Exception e) {
+                        System.out.print(SET_TEXT_COLOR_RED + "WebSocket failed: " + e.getMessage());
+                    }
                 }
 
                 if (result.equals("Left the match.") || result.equals("Resigned.")) {

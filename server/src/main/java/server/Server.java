@@ -67,9 +67,8 @@ public class Server {
 
         // websocket connection
 
-        WebSocketHandler wsHandler = new WebSocketHandler();
-
-        javalin.ws("/connect", ws -> {
+        WebSocketHandler wsHandler = new WebSocketHandler(authDAO);
+        javalin.ws("/ws", ws -> {
             ws.onConnect(wsHandler::handleConnect);
             ws.onMessage(wsHandler::handleMessage);
             ws.onClose(wsHandler::handleClose);
