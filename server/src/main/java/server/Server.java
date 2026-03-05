@@ -25,6 +25,7 @@ import response.NewGameResult;
 import response.RegisterResult;
 import services.GameService;
 import services.UserService;
+import websocket.WebSocketHandler;
 
 public class Server {
 
@@ -63,6 +64,17 @@ public class Server {
 
         // exception handling
         javalin.exception(Exception.class, this::exceptionHandler);
+
+        // websocket connection
+
+        WebSocketHandler wsHandler = new WebSocketHandler();
+
+        javalin.ws("/connect", ws -> {
+            ws.onConnect(wsHandler::handleConnect);
+            ws.onMessage(wsHandler::handleMessage);
+            ws.onClose(wsHandler::handleClose);
+            ws.onError(ctx -> System.out.println("WS Error: " + ctx.error().getMessage()));
+        });
     }
 
     public int run(int desiredPort) {

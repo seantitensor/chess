@@ -16,7 +16,7 @@ public class ConnectionManager {
         connections.computeIfAbsent(gameID, k -> new HashSet<>()).add(session);
     }  
 
-    public void remove(Integer gameID, Session session) {
+    public void removeGame(Integer gameID, Session session) {
         Set<Session> sessionSet  = connections.get(gameID);
         if (sessionSet != null) {
             sessionSet.remove(session);
@@ -26,10 +26,22 @@ public class ConnectionManager {
         }
     }
 
+    public void remove(Session session) {
+        for (var entry : connections.entrySet()) {
+            Set<Session> sessions = entry.getValue();
+            if (sessions.remove(session)) {
+                if (sessions.isEmpty()) {
+                    connections.remove(entry.getKey());
+                }
+                break;
+            }
+        }
+    }
+
     public void broadcast(Integer gameID, Session excludeSession, ServerMessage serverMessage) throws IOException {
         String msg = serverMessage.toString();
         Set<Session> sessionSet  = connections.get(gameID);
-        if (sessionSet == null) { return; }
+        if (sessionSet == null) { return;}
         for (Session c : sessionSet) {
             if (c.isOpen()) {
                 if (!c.equals(excludeSession)) {
