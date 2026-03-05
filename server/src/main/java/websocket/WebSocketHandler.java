@@ -12,15 +12,13 @@ import io.javalin.websocket.WsMessageHandler;
 
 import org.eclipse.jetty.websocket.api.Session;
 
-import websocket.messages.ServerMessage;
-
 import java.io.IOException;
 
-import javax.management.Notification;
-
-import passoff.exception.ResponseParseException;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
@@ -45,10 +43,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             saveSession(gameId, session);
 
             switch(command.getCommandType()) {
-                case CONNECT -> connect(session, gameId, username, (ConnectCommand) command);
+                case CONNECT -> connect(session, gameId, username);
                 case MAKE_MOVE -> makeMove(session, username, (MakeMoveCommand) command);
-                case LEAVE -> leaveGame(session, username, (LeaveGameCommand) command);
-                case RESIGN -> resign(session, username, (ResignCommand) command);
+                case LEAVE -> leave(session, gameId, username);
+                case RESIGN -> resign(session, gameId, username);
             }
         } catch (UnauthorizedException ex) {
             sendMessage(session, gameId, new ErrorMessage("Error: unauthorized"));
@@ -66,39 +64,29 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(Session session, Integer gameID, String username) throws IOException {
         connections.add(gameID, session);
-        var message = String.format("%s Has enter the match", username);
-        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        var message = String.format("%s Has entered the match.", username);
+        var notification = new LoadGameMessage(message);
         connections.broadcast(gameID, session, notification);
     }
 
     private void makeMove(Session session, Integer gameID, String username) throws IOException {
         connections.add(gameID, session);
         var message = String.format("%s Has enter the match", username);
-        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
     }
 
     private void leave(Session session, Integer gameID, String username) throws IOException {
-        connections.add(gameID, session);
-        var message = String.format("%s Has enter the match", username);
-        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.remove(gameID, session);
+        var message = String.format("%s Has left the match.", username);
+        var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
     }
 
     private void resign(Session session, Integer gameID, String username) throws IOException {
-        connections.add(gameID, session);
-        var message = String.format("%s Has enter the match", username);
-        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.remove(gameID, session);
+        var message = String.format("%s Has resigned.", username);
+        var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
-    }
-
-    public void makeNoise(String petName, String sound) throws ResponseParseException {
-        try {
-            var message = String.format("%s says %s", petName, sound);
-            var notification = new Notification(Notification.Type.NOISE, message);
-            connections.broadcast(null, notification);
-        } catch (Exception ex) {
-            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
-        }
     }
 }
