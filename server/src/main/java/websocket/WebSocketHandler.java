@@ -2,7 +2,6 @@ package websocket;
 
 import com.google.gson.Gson;
 
-import exception.ResponseException;
 import exceptions.UnauthorizedException;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsCloseHandler;
@@ -14,10 +13,13 @@ import io.javalin.websocket.WsMessageHandler;
 import org.eclipse.jetty.websocket.api.Session;
 
 import websocket.messages.ServerMessage;
-import webSocketMessages.Notification;
 
 import java.io.IOException;
 
+import javax.management.Notification;
+
+import passoff.exception.ResponseParseException;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
@@ -43,7 +45,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             saveSession(gameId, session);
 
             switch(command.getCommandType()) {
-                case CONNECT -> connect(session, username, (ConnectCommand) command);
+                case CONNECT -> connect(session, gameId, username, (ConnectCommand) command);
                 case MAKE_MOVE -> makeMove(session, username, (MakeMoveCommand) command);
                 case LEAVE -> leaveGame(session, username, (LeaveGameCommand) command);
                 case RESIGN -> resign(session, username, (ResignCommand) command);
@@ -57,22 +59,40 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     }
 
-
     @Override
     public void handleClose(WsCloseContext ctx) {
         System.out.println("Websocket closed");
     }
 
-    p
-
-    private void connect(Session session, String username) throws IOException {
-        connections.add(session);
-        var message = String.format("%s is in the shop", visitorName);
-        var notification = new Notification(Notification.Type.ARRIVAL, message);
-        connections.broadcast(session, notification);
+    private void connect(Session session, Integer gameID, String username) throws IOException {
+        connections.add(gameID, session);
+        var message = String.format("%s Has enter the match", username);
+        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.broadcast(gameID, session, notification);
     }
 
-    public void makeNoise(String petName, String sound) throws ResponseException {
+    private void makeMove(Session session, Integer gameID, String username) throws IOException {
+        connections.add(gameID, session);
+        var message = String.format("%s Has enter the match", username);
+        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.broadcast(gameID, session, notification);
+    }
+
+    private void leave(Session session, Integer gameID, String username) throws IOException {
+        connections.add(gameID, session);
+        var message = String.format("%s Has enter the match", username);
+        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.broadcast(gameID, session, notification);
+    }
+
+    private void resign(Session session, Integer gameID, String username) throws IOException {
+        connections.add(gameID, session);
+        var message = String.format("%s Has enter the match", username);
+        var notification = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        connections.broadcast(gameID, session, notification);
+    }
+
+    public void makeNoise(String petName, String sound) throws ResponseParseException {
         try {
             var message = String.format("%s says %s", petName, sound);
             var notification = new Notification(Notification.Type.NOISE, message);

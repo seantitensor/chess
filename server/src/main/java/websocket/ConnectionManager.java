@@ -1,28 +1,36 @@
 package websocket;
 
-import org.eclipse.jetty.websocket.api.Session;
-
 import java.io.IOException;
-import java.sql.Connection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.eclipse.jetty.websocket.api.Session;
 
 import websocket.messages.ServerMessage;
 
 public class ConnectionManager {
-    public final ConcurrentHashMap<Integer, Set<Connection>> connections = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<Integer, Set<Session>> connections = new ConcurrentHashMap<>();
 
-    public void add(Session session) {
-        connections.put(session, session);
+    public void add(Integer gameID, Session session) {
+        connections.computeIfAbsent(gameID, k -> new HashSet<>()).add(session);
+    }  
+
+    public void remove(Integer gameID, Session session) {
+        Set<Session> sessionSet  = connections.get(gameID);
+        if (sessionSet != null) {
+            sessionSet.remove(session);
+            if (sessionSet.isEmpty()) {
+                connections.remove(gameID);
+            }
+        }
     }
 
-    public void remove(Session session) {
-        connections.remove(session);
-    }
-
-    public void broadcast(Session excludeSession, ServerMessage serverMessage) throws IOException {
+    public void broadcast(Integer gameID, Session excludeSession, ServerMessage serverMessage) throws IOException {
         String msg = serverMessage.toString();
-        for (Session c : connections.values()) {
+        Set<Session> sessionSet  = connections.get(gameID);
+        if (sessionSet == null) { return; }
+        for (Session c : sessionSet) {
             if (c.isOpen()) {
                 if (!c.equals(excludeSession)) {
                     c.getRemote().sendString(msg);
