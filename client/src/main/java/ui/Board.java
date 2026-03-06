@@ -2,9 +2,11 @@ package ui;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collection;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import static ui.EscapeSequences.BLACK_BISHOP;
@@ -26,6 +28,13 @@ import static ui.EscapeSequences.WHITE_QUEEN;
 import static ui.EscapeSequences.WHITE_ROOK;
 
 public class Board {
+    public ChessBoard chessBoard;
+
+    public Board() {
+        this.chessBoard = new ChessBoard();
+        chessBoard.resetBoard();
+    }
+
     // Board dimensions.
     private static final int BOARD_SIZE_IN_SQUARES = 8;
 
@@ -47,25 +56,22 @@ public class Board {
         out.println();
     }
 
-    public static void drawBoard(PrintStream out, boolean isWhite) {
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
-
+    public void drawBoard(PrintStream out, boolean isWhite) {
         drawHeaders(out, isWhite);
         if (isWhite == false) {
             for (int boardRow = 1 ; boardRow <= BOARD_SIZE_IN_SQUARES ; ++boardRow) {
-                drawRow(out,boardRow, board);
+                drawRow(out,boardRow);
             }
         } else {
             for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
-                drawRow(out,boardRow, board);
+                drawRow(out,boardRow);
             }
         }
         drawHeaders(out, isWhite);
         out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
-    private static void drawRow(PrintStream out, int row, ChessBoard board) {
+    private void drawRow(PrintStream out, int row) {
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + row + EMPTY + RESET_BG_COLOR);
         for (int col = 1; col <= 8; ++col) {
             if ((row + col) % 2 == 0) {
@@ -74,7 +80,7 @@ public class Board {
                 out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
             }
 
-            ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+            ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
             out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
         }
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + EMPTY + row + RESET_BG_COLOR);
@@ -93,5 +99,19 @@ public class Board {
             case QUEEN -> isWhite ? WHITE_QUEEN : BLACK_QUEEN; 
             case KING -> isWhite ? WHITE_KING : BLACK_KING;           
         };
+    }
+    
+    public void drawMoves(Collection<ChessMove> moves) {
+        for (ChessMove move : moves) {
+            ChessPosition pos = move.getEndPosition();
+            int row = pos.getRow();
+            int col = pos.getColumn();
+            if ((row + col) % 2 == 0) {
+                System.out.print(SET_TEXT_COLOR_YELLOW);
+            } else {
+                System.out.print(SET_TEXT_COLOR_YELLOW);
+            }
+            System.out.print(SET_TEXT_COLOR_YELLOW + " * " + RESET_TEXT_COLOR);
+        }
     }
 }

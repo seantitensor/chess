@@ -51,10 +51,12 @@ public class Repl {
 
                 if (result.equals("Joined game.") || result.equals("Observing game.")) {
                     gameClient.setAuthToken(preClient.getAuthToken());
+                    gameClient.setGameID(postClient.getGameID());
                     state = State.INGAME;
                     try {
                         var ws = new WebsocketFacade(serverUrl, gameClient);
                         gameClient.setWebsocketFacade(ws);
+                        gameClient.connectToWS();
                     } catch (Exception e) {
                         System.out.print(SET_TEXT_COLOR_RED + "WebSocket failed: " + e.getMessage());
                     }

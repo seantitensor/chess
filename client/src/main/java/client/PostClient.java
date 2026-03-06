@@ -7,11 +7,11 @@ import exception.ResponseException;
 import request.CreateGameRequest;
 import request.JoinGameRequest;
 import response.ListGameResult;
-import ui.Board;
 
 public class PostClient implements Client {
     private final ServerFacade server;
     private String authToken;
+    private Integer gameID;
 
     public PostClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
@@ -19,6 +19,10 @@ public class PostClient implements Client {
 
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
+    }
+
+    public Integer getGameID() {
+        return gameID;
     }
 
     @Override
@@ -51,8 +55,8 @@ public class PostClient implements Client {
 
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
+            this.gameID = Integer.valueOf(params[0]);
             server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
-            Board.drawBoard(System.out, (params[1].toUpperCase().equals("WHITE")));
             return "Joined game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
@@ -60,8 +64,8 @@ public class PostClient implements Client {
 
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
+            this.gameID = Integer.valueOf(params[0]);
             server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
-            Board.drawBoard(System.out, true);
             return "Observing game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
