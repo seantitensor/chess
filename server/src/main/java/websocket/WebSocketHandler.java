@@ -6,7 +6,10 @@ import org.eclipse.jetty.websocket.api.Session;
 
 import com.google.gson.Gson;
 
+import chess.ChessGame;
+import chess.InvalidMoveException;
 import dataaccess.auth.AuthDAO;
+import dataaccess.game.GameDAO;
 import exceptions.UnauthorizedException;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsCloseHandler;
@@ -14,6 +17,8 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsConnectHandler;
 import io.javalin.websocket.WsMessageContext;
 import io.javalin.websocket.WsMessageHandler;
+import model.GameData;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -24,9 +29,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final ConnectionManager connections = new ConnectionManager();
     private static final Gson gson = new Gson();
     private final AuthDAO authDAO;
+    private final GameDAO gameDAO;
 
-    public WebSocketHandler(AuthDAO authDAO) {
+    public WebSocketHandler(AuthDAO authDAO, GameDAO gameDAO) {
         this.authDAO = authDAO;
+        this.gameDAO = gameDAO;
     }
 
     @Override
@@ -46,7 +53,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             switch(command.getCommandType()) {
                 case CONNECT -> connect(session, gameId, username);
-                case MAKE_MOVE -> makeMove(session, gameId, username);
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
+                    makeMove(session, moveCommand, username);
+                }
                 case LEAVE -> leave(session, gameId, username);
                 case RESIGN -> resign(session, gameId, username);
             }
@@ -70,22 +80,44 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(Session session, Integer gameID, String username) throws IOException {
         connections.add(gameID, session);
-        var messageString = new LoadGameMessage("Welcome to the game!");
-        session.getRemote().sendString(messageString.toString());
+        
+        GameData gameData = gameDAO.getGame(gameID);
+        var loadGame = new LoadGameMessage(gameData.game());
+        session.getRemote().sendString(gson.toJson(loadGame));
+
         var message = String.format("%s Has entered the match.", username);
         var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
     }
 
-    private void makeMove(Session session, Integer gameID, String username) throws IOException {
-        connections.add(gameID, session);
+    private void makeMove(Session session, MakeMoveCommand command, String username) throws IOException {
+        connections.add(command.getGameID(), session);
+        
 
-        var loadMessage = new LoadGameMessage(gameID.toString());
-        connections.broadcast(gameID, null, loadMessage);
+        GameData gameData = gameDAO.getGame(command.getGameID());
+        ChessGame.TeamColor currentTurn = gameData.game().getTeamTurn();
+        String currentUser = (currentTurn == ChessGame.TeamColor.WHITE) 
+                        ? gameData.whiteUsername() 
+                        : gameData.blackUsername();
+
+        if (!username.equals(currentUser)) {
+            throw new UnauthorizedException("It's not your turn, " + username + "!");
+        }
+        
+        try { 
+            gameData.game().makeMove(command.getMove());
+        } catch (InvalidMoveException e) {
+            session.getRemote().sendString(new Gson().toJson(new ErrorMessage("Illegal move!")));
+        }
+        gameDAO.updateGame(gameData);
+        var loadGame = new LoadGameMessage(gameData.game());
+        session.getRemote().sendString(gson.toJson(loadGame));
+
+        connections.broadcast(command.getGameID(), null, loadGame);
 
         var message = String.format("%s Has made a move!", username);
         var notification = new NotificationMessage(message);
-        connections.broadcast(gameID, session, notification);
+        connections.broadcast(command.getGameID(), session, notification);
     }
 
     private void leave(Session session, Integer gameID, String username) throws IOException {
