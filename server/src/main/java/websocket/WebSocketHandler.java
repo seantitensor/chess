@@ -7,6 +7,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import com.google.gson.Gson;
 
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.InvalidMoveException;
 import dataaccess.auth.AuthDAO;
 import dataaccess.game.GameDAO;
@@ -49,7 +50,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
             gameId = command.getGameID();
-            String username = getUsername(command.getAuthToken());
+            String authToken = command.getAuthToken();
+            var authData = authDAO.getAuthData(authToken);
+            if (authData == null) {
+                throw new UnauthorizedException("Bad auth");
+            }
+            String username = getUsername(authToken);
 
             switch(command.getCommandType()) {
                 case CONNECT -> connect(session, gameId, username);
@@ -63,7 +69,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         } catch (UnauthorizedException authEx) {
             try {
                 ErrorMessage errorMessage = new ErrorMessage(authEx.getMessage());
-            session.getRemote().sendString(errorMessage.toString());
+            session.getRemote().sendString(gson.toJson(errorMessage));
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -82,19 +88,28 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.add(gameID, session);
         
         GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("Invalid Game ID")));
+            return;
+        }
         var loadGame = new LoadGameMessage(gameData.game());
         session.getRemote().sendString(gson.toJson(loadGame));
-
-        var message = String.format("%s Has entered the match.", username);
+        String message;
+        if (username.equals(gameData.whiteUsername())) {
+            message = String.format("%s joined the game as White.", username);
+        } else if (username.equals(gameData.blackUsername())) {
+            message = String.format("%s joined the game as Black.", username);
+        } else {
+            message = String.format("%s joined as an observer.", username);
+        }
         var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
     }
 
     private void makeMove(Session session, MakeMoveCommand command, String username) throws IOException {
-        connections.add(command.getGameID(), session);
-        
-
-        GameData gameData = gameDAO.getGame(command.getGameID());
+        // get info about turn
+        var gameID = command.getGameID();
+        GameData gameData = gameDAO.getGame(gameID);
         ChessGame.TeamColor currentTurn = gameData.game().getTeamTurn();
         String currentUser = (currentTurn == ChessGame.TeamColor.WHITE) 
                         ? gameData.whiteUsername() 
@@ -103,35 +118,61 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         if (!username.equals(currentUser)) {
             throw new UnauthorizedException("It's not your turn, " + username + "!");
         }
-        
+        ChessGame.TeamColor opponentColor = (currentTurn == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        String opponentName = (opponentColor == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+
+        // make move
+        ChessMove move = command.getMove();
         try { 
-            gameData.game().makeMove(command.getMove());
+            gameData.game().makeMove(move);
         } catch (InvalidMoveException e) {
             session.getRemote().sendString(new Gson().toJson(new ErrorMessage("Illegal move!")));
+            return;
         }
         gameDAO.updateGame(gameData);
         var loadGame = new LoadGameMessage(gameData.game());
         session.getRemote().sendString(gson.toJson(loadGame));
 
-        connections.broadcast(command.getGameID(), null, loadGame);
+        String moveMsg = String.format("%s moved from %s to %s", username, move.getStartPosition(), move.getEndPosition());
+        connections.broadcast(gameID, session, new NotificationMessage(moveMsg));
+        connections.broadcast(gameID, session, loadGame);
 
-        var message = String.format("%s Has made a move!", username);
-        var notification = new NotificationMessage(message);
-        connections.broadcast(command.getGameID(), session, notification);
+        if (gameData.game().isInCheckmate(opponentColor)) {
+            connections.broadcast(gameID, null, new NotificationMessage(opponentName + " is in CHECKMATE!"));
+        } else if (gameData.game().isInCheck(opponentColor)) {
+            connections.broadcast(gameID, null, new NotificationMessage(opponentName + " is in CHECK!"));
+        }
     }
 
     private void leave(Session session, Integer gameID, String username) throws IOException {
-        connections.removeGame(gameID, session);
+        connections.remove(session);
         var message = String.format("%s Has left the match.", username);
         var notification = new NotificationMessage(message);
         connections.broadcast(gameID, session, notification);
+        GameData gameData = gameDAO.getGame(gameID);
+        if (username.equals(gameData.whiteUsername())) {
+            GameData newGameData = new GameData(gameData.gameID(),null,gameData.blackUsername(), gameData.gameName(), gameData.game());
+            gameDAO.updateGame(newGameData);
+        } else if (username.equals(gameData.blackUsername())) {
+            GameData newGameData = new GameData(gameData.gameID(),gameData.whiteUsername(),null, gameData.gameName(), gameData.game());
+            gameDAO.updateGame(newGameData);
+        }
     }
 
     private void resign(Session session, Integer gameID, String username) throws IOException {
-        connections.removeGame(gameID, session);
+        GameData gameData = gameDAO.getGame(gameID);
+        if (gameData == null) {
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("Invalid Game ID")));
+            return;
+        }
+
+        if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("Observers cannot resign")));
+            return;
+        }
         var message = String.format("%s Has resigned.", username);
         var notification = new NotificationMessage(message);
-        connections.broadcast(gameID, session, notification);
+        connections.broadcast(gameID, null, notification);
     }
 
     private String getUsername(String authToken) {

@@ -7,11 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jetty.websocket.api.Session;
 
+import com.google.gson.Gson;
+
 import websocket.messages.ServerMessage;
 
 public class ConnectionManager {
     public final ConcurrentHashMap<Integer, Set<Session>> connections = new ConcurrentHashMap<>();
-
+    private final Gson gson = new Gson();
     public void add(Integer gameID, Session session) {
         connections.computeIfAbsent(gameID, k -> new HashSet<>()).add(session);
     }  
@@ -39,7 +41,7 @@ public class ConnectionManager {
     }
 
     public void broadcast(Integer gameID, Session excludeSession, ServerMessage serverMessage) throws IOException {
-        String msg = serverMessage.toString();
+        String msg = gson.toJson(serverMessage);
         Set<Session> sessionSet  = connections.get(gameID);
         if (sessionSet == null) { return;}
         for (Session c : sessionSet) {

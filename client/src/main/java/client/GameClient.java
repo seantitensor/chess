@@ -110,7 +110,7 @@ public class GameClient implements Client, NotificationHandler {
 
     public String redraw() throws ResponseException {
         board.drawBoard(System.out, isWhitePlayer);
-        return "";
+        return "\n";
     }
 
     @Override

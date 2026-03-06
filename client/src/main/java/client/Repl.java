@@ -2,6 +2,8 @@ package client;
 
 import java.util.Scanner;
 
+import com.google.gson.Gson;
+
 import client.websocket.WebsocketFacade;
 import exception.ResponseException;
 import static ui.EscapeSequences.RESET_TEXT_COLOR;
@@ -14,7 +16,8 @@ public class Repl {
     private final PostClient postClient;
     private final GameClient gameClient;
     private State state = State.SIGNEDOUT;
-    private String serverUrl;
+    private final String serverUrl;
+    private final Gson gson = new Gson();
 
     public Repl(String serverUrl) throws ResponseException {
         this.preClient = new PreClient(serverUrl);
@@ -52,6 +55,7 @@ public class Repl {
                 if (result.equals("Joined game.") || result.equals("Observing game.")) {
                     gameClient.setAuthToken(preClient.getAuthToken());
                     gameClient.setGameID(postClient.getGameID());
+                    gameClient.setWhitePlayer(postClient.getWhitePlayer());
                     state = State.INGAME;
                     try {
                         var ws = new WebsocketFacade(serverUrl, gameClient);
@@ -68,7 +72,7 @@ public class Repl {
                 
                 System.out.print(SET_TEXT_COLOR_GREEN + result + RESET_TEXT_COLOR);
             } catch (Throwable e) {
-                var msg = e.toString();
+                var msg = gson.toJson(e);
                 System.out.print(SET_TEXT_COLOR_RED + msg + RESET_TEXT_COLOR);
             }
         }

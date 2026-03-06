@@ -12,6 +12,7 @@ public class PostClient implements Client {
     private final ServerFacade server;
     private String authToken;
     private Integer gameID;
+    private boolean isWhitePlayer;
 
     public PostClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
@@ -23,6 +24,14 @@ public class PostClient implements Client {
 
     public Integer getGameID() {
         return gameID;
+    }
+
+    public boolean getWhitePlayer() {
+        return isWhitePlayer;
+    }
+
+    private void setWhitePlayer(boolean isWhitePlayer) {
+        this.isWhitePlayer = isWhitePlayer;
     }
 
     @Override
@@ -57,6 +66,8 @@ public class PostClient implements Client {
         if (params.length == 2) {
             this.gameID = Integer.valueOf(params[0]);
             server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
+            boolean whitePlayer = params[1].equalsIgnoreCase("white");
+            setWhitePlayer(whitePlayer);
             return "Joined game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
