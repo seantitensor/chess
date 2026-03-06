@@ -118,7 +118,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                         : gameData.blackUsername();
 
         if (!username.equals(currentUser)) {
-            throw new UnauthorizedException("It's not your turn, " + username + "!");
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("It is not your turn.")));
+            return;
         }
 
         if (gameData.game().isGameOver() == true) {
@@ -141,7 +142,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var loadGame = new LoadGameMessage(gameData.game());
         session.getRemote().sendString(gson.toJson(loadGame));
 
-        String moveMsg = String.format("%s moved from %s to %s", username, move.getStartPosition(), move.getEndPosition());
+        String moveMsg = String.format("%s moved from %s to %s", username, move.getStartPosition().toString(), move.getEndPosition().toString());
         connections.broadcast(gameID, session, new NotificationMessage(moveMsg));
         connections.broadcast(gameID, session, loadGame);
 

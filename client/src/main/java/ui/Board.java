@@ -3,6 +3,7 @@ package ui;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import chess.ChessBoard;
 import chess.ChessGame;
@@ -56,33 +57,64 @@ public class Board {
         out.println();
     }
 
-    public void drawBoard(PrintStream out, boolean isWhite) {
+    public void drawBoard(PrintStream out, boolean isWhite, Collection<ChessMove> moves) {
         drawHeaders(out, isWhite);
         if (isWhite == false) {
             for (int boardRow = 1 ; boardRow <= BOARD_SIZE_IN_SQUARES ; ++boardRow) {
-                drawRow(out,boardRow);
+                drawRow(out,boardRow,isWhite, moves);
             }
         } else {
             for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
-                drawRow(out,boardRow);
+                drawRow(out,boardRow,isWhite, moves);
             }
         }
         drawHeaders(out, isWhite);
         out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
-    private void drawRow(PrintStream out, int row) {
+    private void drawRow(PrintStream out, int row, boolean isWhite, Collection<ChessMove> moves) {
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + row + EMPTY + RESET_BG_COLOR);
-        for (int col = 1; col <= 8; ++col) {
-            if ((row + col) % 2 == 0) {
-                out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-            } else {
-                out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-            }
 
-            ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
-            out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+        Collection<ChessPosition> poses;
+        if (moves!= null) {
+            poses = moves.stream()
+                        .map(ChessMove::getEndPosition)
+                        .collect(Collectors.toSet());
+        } else {
+            poses = null;
         }
+        if (isWhite) {
+            for (int col = 1; col <= 8; ++col) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+
+                if (poses != null && poses.contains(currentPos)) {
+                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+                } else if ((row + col) % 2 == 0) {
+                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+                } else {
+                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                }
+
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+            }
+        } else {
+            for (int col = 8; col >= 1; --col) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+
+                if (poses != null && poses.contains(currentPos)) {
+                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+                } else if ((row + col) % 2 == 0) {
+                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+                } else {
+                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                }
+
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+            }
+        }
+
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + EMPTY + row + RESET_BG_COLOR);
         out.print(RESET_BG_COLOR);
         out.println();
@@ -99,19 +131,5 @@ public class Board {
             case QUEEN -> isWhite ? WHITE_QUEEN : BLACK_QUEEN; 
             case KING -> isWhite ? WHITE_KING : BLACK_KING;           
         };
-    }
-    
-    public void drawMoves(Collection<ChessMove> moves) {
-        for (ChessMove move : moves) {
-            ChessPosition pos = move.getEndPosition();
-            int row = pos.getRow();
-            int col = pos.getColumn();
-            if ((row + col) % 2 == 0) {
-                System.out.print(SET_TEXT_COLOR_YELLOW);
-            } else {
-                System.out.print(SET_TEXT_COLOR_YELLOW);
-            }
-            System.out.print(SET_TEXT_COLOR_YELLOW + " * " + RESET_TEXT_COLOR);
-        }
     }
 }

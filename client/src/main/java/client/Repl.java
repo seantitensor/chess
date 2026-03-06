@@ -56,6 +56,7 @@ public class Repl {
                     gameClient.setAuthToken(preClient.getAuthToken());
                     if (result.equals("Observing game.")) {
                         gameClient.setIsObserving(true);
+                        gameClient.setWhitePlayer(true);
                     }
                     gameClient.setGameID(postClient.getGameID());
                     gameClient.setWhitePlayer(postClient.getWhitePlayer());
@@ -75,7 +76,7 @@ public class Repl {
                 
                 System.out.print(SET_TEXT_COLOR_GREEN + result + RESET_TEXT_COLOR);
             } catch (Throwable e) {
-                var msg = gson.toJson(e);
+                var msg = e.getMessage();
                 System.out.print(SET_TEXT_COLOR_RED + msg + RESET_TEXT_COLOR);
             }
         }

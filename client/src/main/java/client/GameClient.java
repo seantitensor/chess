@@ -14,9 +14,10 @@ import exception.ResponseException;
 import ui.Board;
 import static ui.EscapeSequences.RESET_TEXT_COLOR;
 import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
-import static ui.EscapeSequences.SET_TEXT_COLOR_MAGENTA;
 import static ui.EscapeSequences.SET_TEXT_COLOR_RED;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 public class GameClient implements Client, NotificationHandler {
@@ -81,12 +82,15 @@ public class GameClient implements Client, NotificationHandler {
             ChessPosition pos = parsePostion(params[0]);
             if (pos != null) {
                 ChessPiece piece = board.chessBoard.getPiece(pos);
+                if (piece == null) {
+                    return "no piece at position " + pos.toString();
+                }
                 Collection<ChessMove> moves = piece.pieceMoves(board.chessBoard, pos);
-                board.drawMoves(moves);
+                this.board.drawBoard(System.out, isWhitePlayer, moves);
                 return "";
             }
         }
-        return "";
+        return "Add a position to see the available moves";
     }
 
     private String move(String... params) throws ResponseException {
@@ -96,17 +100,23 @@ public class GameClient implements Client, NotificationHandler {
         if (params.length == 2) {
             ChessPosition from = parsePostion(params[0]);
             ChessPosition to = parsePostion(params[1]);
-            ChessMove move = new ChessMove(from, to, null);
+            ChessPiece.PieceType promotion = null;
+            ChessPiece piece = board.chessBoard.getPiece(from);
+            if (piece != null && piece.getPieceType() == ChessPiece.PieceType.PAWN && ((!isWhitePlayer && to.getRow() == 1) || (isWhitePlayer && to.getRow() == 8))) {
+                promotion = promote();
+            }
+            ChessMove move = new ChessMove(from, to, promotion);
             if (from != null && to != null) {
                 ws.makeMove(authToken, gameID, move);
                 return "Move sent...";
             }
         }
-        return "Invalid move.";
+        return "make sure to add a to and from square.";
     }
 
     private String leave() throws ResponseException {
         ws.leave(authToken, gameID);
+        clearClient();
         return "Left the match.";
     }
 
@@ -126,7 +136,7 @@ public class GameClient implements Client, NotificationHandler {
     }
 
     public String redraw() throws ResponseException {
-        board.drawBoard(System.out, isWhitePlayer);
+        this.board.drawBoard(System.out, isWhitePlayer, null);
         return "\n";
     }
 
@@ -138,16 +148,18 @@ public class GameClient implements Client, NotificationHandler {
                 ChessGame game = loadGame.getGame();
                 this.board.chessBoard = game.getBoard();
                 this.setWhitePlayer(isWhitePlayer);
-                this.board.drawBoard(System.out, isWhitePlayer);
-                System.out.println(SET_TEXT_COLOR_MAGENTA + serverMessage);
+                System.out.println("\n");
+                this.board.drawBoard(System.out, isWhitePlayer, null);
                 printPrompt(State.INGAME);
             }
             case ERROR -> {
-                System.out.println(SET_TEXT_COLOR_RED + serverMessage);
+                var error = (ErrorMessage) serverMessage;
+                System.out.println(SET_TEXT_COLOR_RED + error.getMessage());
                 printPrompt(State.INGAME);
             }
             case NOTIFICATION -> {
-                System.out.println(SET_TEXT_COLOR_GREEN + serverMessage);
+                var notif = (NotificationMessage) serverMessage;
+                System.out.println(SET_TEXT_COLOR_GREEN + notif.getMessage());
                 printPrompt(State.INGAME);
             }
         }
@@ -176,5 +188,25 @@ public class GameClient implements Client, NotificationHandler {
         int col = input.charAt(0) - 'a' + 1;
         int row = input.charAt(1) - '1' + 1;
         return new ChessPosition(row, col);
+    }
+
+    private void clearClient() {
+        this.gameID = null;
+        this.board = new Board();
+        this.isWhitePlayer = true;
+        this.isObserving = false;
+    }
+
+    private ChessPiece.PieceType promote() {
+        System.out.print("Promotion! Choose a piece (Q, N, R, B): ");
+        Scanner scanner = new Scanner(System.in);
+        String choice = scanner.nextLine().trim().toUpperCase();
+        return switch (choice) {
+            case "N" -> ChessPiece.PieceType.KNIGHT;
+            case "R" -> ChessPiece.PieceType.ROOK;
+            case "B" -> ChessPiece.PieceType.BISHOP;
+            case "Q" -> ChessPiece.PieceType.QUEEN;
+            default -> promote();
+        };
     }
 }
