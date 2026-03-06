@@ -54,6 +54,9 @@ public class Repl {
 
                 if (result.equals("Joined game.") || result.equals("Observing game.")) {
                     gameClient.setAuthToken(preClient.getAuthToken());
+                    if (result.equals("Observing game.")) {
+                        gameClient.setIsObserving(true);
+                    }
                     gameClient.setGameID(postClient.getGameID());
                     gameClient.setWhitePlayer(postClient.getWhitePlayer());
                     state = State.INGAME;

@@ -129,7 +129,7 @@ public class Server {
         String authToken = ctx.header("authorization");
         JoinGameRequest req = ctx.bodyAsClass(JoinGameRequest.class);
 
-        if (req.gameID() == null) {
+        if (req.playerColor() == null || req.gameID() == null) {
             throw new BadRequestException("bad request");
         }
 

@@ -108,6 +108,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void makeMove(Session session, MakeMoveCommand command, String username) throws IOException {
         // get info about turn
+
+
         var gameID = command.getGameID();
         GameData gameData = gameDAO.getGame(gameID);
         ChessGame.TeamColor currentTurn = gameData.game().getTeamTurn();
@@ -118,6 +120,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         if (!username.equals(currentUser)) {
             throw new UnauthorizedException("It's not your turn, " + username + "!");
         }
+
+        if (gameData.game().isGameOver() == true) {
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("Game is already over, leave the match")));
+            return;
+        }
+        
         ChessGame.TeamColor opponentColor = (currentTurn == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
         String opponentName = (opponentColor == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
 
@@ -139,6 +147,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         if (gameData.game().isInCheckmate(opponentColor)) {
             connections.broadcast(gameID, null, new NotificationMessage(opponentName + " is in CHECKMATE!"));
+                gameData.game().setGameOver(true);
+                gameDAO.updateGame(gameData);
         } else if (gameData.game().isInCheck(opponentColor)) {
             connections.broadcast(gameID, null, new NotificationMessage(opponentName + " is in CHECK!"));
         }
@@ -166,6 +176,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             return;
         }
 
+        if (gameData.game().isGameOver() == true) {
+            session.getRemote().sendString(gson.toJson(new ErrorMessage("Game is already over leave the match")));
+            return;
+        }
+
         if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
             session.getRemote().sendString(gson.toJson(new ErrorMessage("Observers cannot resign")));
             return;
@@ -173,6 +188,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var message = String.format("%s Has resigned.", username);
         var notification = new NotificationMessage(message);
         connections.broadcast(gameID, null, notification);
+        gameData.game().setGameOver(true);
+        gameDAO.updateGame(gameData);
     }
 
     private String getUsername(String authToken) {

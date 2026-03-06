@@ -76,7 +76,6 @@ public class PostClient implements Client {
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
             this.gameID = Integer.valueOf(params[0]);
-            server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
             return "Observing game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");

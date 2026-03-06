@@ -2,6 +2,7 @@ package client;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Scanner;
 
 import chess.ChessGame;
 import chess.ChessMove;
@@ -25,8 +26,7 @@ public class GameClient implements Client, NotificationHandler {
     private Integer gameID;
     private Board board = new Board();
     private boolean isWhitePlayer;
-
-
+    private boolean isObserving;
 
     public GameClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
@@ -34,6 +34,10 @@ public class GameClient implements Client, NotificationHandler {
 
     public void setWhitePlayer(boolean isWhitePlayer) {
         this.isWhitePlayer = isWhitePlayer;
+    }
+
+    public void setIsObserving(boolean isObserving) {
+        this.isObserving = isObserving;
     }
 
     public void setAuthToken(String authToken) {
@@ -72,7 +76,7 @@ public class GameClient implements Client, NotificationHandler {
         }
     }
 
-    public String moves(String... params) throws ResponseException {
+    private String moves(String... params) throws ResponseException {
         if (params.length == 1) {
             ChessPosition pos = parsePostion(params[0]);
             if (pos != null) {
@@ -85,7 +89,10 @@ public class GameClient implements Client, NotificationHandler {
         return "";
     }
 
-    public String move(String... params) throws ResponseException {
+    private String move(String... params) throws ResponseException {
+        if (isObserving == true) {
+            return "Observers cannot make a move";
+        }
         if (params.length == 2) {
             ChessPosition from = parsePostion(params[0]);
             ChessPosition to = parsePostion(params[1]);
@@ -98,14 +105,24 @@ public class GameClient implements Client, NotificationHandler {
         return "Invalid move.";
     }
 
-    public String leave() throws ResponseException {
+    private String leave() throws ResponseException {
         ws.leave(authToken, gameID);
         return "Left the match.";
     }
 
-    public String resign() throws ResponseException {
-        ws.resign(authToken, gameID);
-        return "Resigned.";
+    private String resign() throws ResponseException {
+        if (isObserving == true) {
+            return "Observers cannot resign. leave instead";
+        }
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+        Scanner scanner = new Scanner(System.in);
+        String response = scanner.nextLine().trim().toLowerCase();
+        if (response.equals("yes")) {
+                ws.resign(authToken, gameID);
+                return "Resigned.";
+        } else {
+            return "Resignation cancelled.";
+        }
     }
 
     public String redraw() throws ResponseException {
