@@ -51,9 +51,13 @@ public class PostClient implements Client {
 
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
-            server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
-            Board.drawBoard(System.out, (params[1].toUpperCase().equals("WHITE")));
-            return "Joined game.";
+            try {
+                server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
+                Board.drawBoard(System.out, (params[1].toUpperCase().equals("WHITE")));
+                return "Joined game.";
+            } catch (Exception ex) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+            }
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
     }
@@ -61,16 +65,21 @@ public class PostClient implements Client {
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
             var gameIds = server.listGames(authToken);
-            for ( ListGameResult result : gameIds.games()) {
-                if (result.gameID() == Integer.valueOf(params[0])) {
-                    Board.drawBoard(System.out, true);
-                    return "Observing game.";
+            try { 
+                for ( ListGameResult result : gameIds.games()) {
+                    if (result.gameID() == Integer.valueOf(params[0])) {
+                        Board.drawBoard(System.out, true);
+                        return "Observing game.";
+                    }
                 }
+            } catch (Exception ex) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
+
             }
             // server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
             throw new ResponseException(ResponseException.Code.ClientError, "Game Id doesn't exist");
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
     }
 
     public String list() throws ResponseException {
@@ -82,9 +91,9 @@ public class PostClient implements Client {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 1;
         for (ListGameResult game : games) {
-            stringBuilder.append(String.format("%d. ID: %d Game Name: %s (White: %s, Black: %s)\n", 
+            stringBuilder.append(String.format("%d. Game Name: %s (White: %s, Black: %s)\n", 
                 i++,
-                game.gameID(),
+                // game.gameID(),
                 game.gameName(), 
                 game.whiteUsername() != null ? game.whiteUsername() : "Empty", 
                 game.blackUsername() != null ? game.blackUsername() : "Empty"

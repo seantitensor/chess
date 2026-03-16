@@ -54,28 +54,41 @@ public class Board {
         drawHeaders(out, isWhite);
         if (isWhite == false) {
             for (int boardRow = 1 ; boardRow <= BOARD_SIZE_IN_SQUARES ; ++boardRow) {
-                drawRow(out,boardRow, board);
+                drawRow(out,boardRow, board, isWhite);
             }
         } else {
             for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
-                drawRow(out,boardRow, board);
+                drawRow(out,boardRow, board, isWhite);
             }
         }
         drawHeaders(out, isWhite);
         out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
-    private static void drawRow(PrintStream out, int row, ChessBoard board) {
+    private static void drawRow(PrintStream out, int row, ChessBoard board, boolean isWhite) {
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + row + EMPTY + RESET_BG_COLOR);
-        for (int col = 1; col <= 8; ++col) {
-            if ((row + col) % 2 == 0) {
-                out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-            } else {
-                out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-            }
+        if (isWhite) {
+            for (int col = 1; col <= 8; ++col) {
+                if ((row + col) % 2 == 0) {
+                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+                } else {
+                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                }
 
-            ChessPiece piece = board.getPiece(new ChessPosition(row, col));
-            out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+            }
+        } else {
+            for (int col = 8; col >= 1; --col) {
+                if ((row + col) % 2 == 0) {
+                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+                } else {
+                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                }
+
+                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+            }
         }
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + EMPTY + row + RESET_BG_COLOR);
         out.print(RESET_BG_COLOR);
