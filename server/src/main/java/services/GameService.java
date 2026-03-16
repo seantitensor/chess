@@ -45,7 +45,7 @@ public class GameService {
         }
 
         if (req.playerColor() == null) {
-            return; 
+            throw new BadRequestException("No color for user");
         }
 
         String username = (req.playerColor() == ChessGame.TeamColor.BLACK) 

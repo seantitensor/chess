@@ -60,9 +60,15 @@ public class PostClient implements Client {
 
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
-            server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
-            Board.drawBoard(System.out, true);
-            return "Observing game.";
+            var gameIds = server.listGames(authToken);
+            for ( ListGameResult result : gameIds.games()) {
+                if (result.gameID() == Integer.valueOf(params[0])) {
+                    Board.drawBoard(System.out, true);
+                    return "Observing game.";
+                }
+            }
+            // server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
+            throw new ResponseException(ResponseException.Code.ClientError, "Game Id doesn't exist");
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
     }
