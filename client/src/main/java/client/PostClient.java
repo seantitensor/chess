@@ -64,11 +64,15 @@ public class PostClient implements Client {
 
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
-            this.gameID = Integer.valueOf(params[0]);
-            server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
-            boolean whitePlayer = params[1].equalsIgnoreCase("white");
-            setWhitePlayer(whitePlayer);
-            return "Joined game.";
+            try {
+              this.gameID = Integer.valueOf(params[0]);
+              server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
+              boolean whitePlayer = params[1].equalsIgnoreCase("white");
+              setWhitePlayer(whitePlayer);
+              return "Joined game.";
+            } catch (Exception ex) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+            }
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
     }
@@ -78,7 +82,7 @@ public class PostClient implements Client {
             this.gameID = Integer.valueOf(params[0]);
             return "Observing game.";
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
+        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
     }
 
     public String list() throws ResponseException {
@@ -90,9 +94,9 @@ public class PostClient implements Client {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 1;
         for (ListGameResult game : games) {
-            stringBuilder.append(String.format("%d. ID: %d Game Name: %s (White: %s, Black: %s)\n", 
+            stringBuilder.append(String.format("%d. Game Name: %s (White: %s, Black: %s)\n", 
                 i++,
-                game.gameID(),
+                // game.gameID(),
                 game.gameName(), 
                 game.whiteUsername() != null ? game.whiteUsername() : "Empty", 
                 game.blackUsername() != null ? game.blackUsername() : "Empty"
