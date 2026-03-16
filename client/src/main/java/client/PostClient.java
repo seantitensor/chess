@@ -79,8 +79,12 @@ public class PostClient implements Client {
 
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
-            this.gameID = Integer.valueOf(params[0]);
-            return "Observing game.";
+            try {
+                this.gameID = Integer.valueOf(params[0]);
+                return "Observing game.";
+            } catch (Exception ex) {
+                throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
+            }
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
     }
