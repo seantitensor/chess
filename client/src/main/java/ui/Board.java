@@ -85,33 +85,11 @@ public class Board {
         }
         if (isWhite) {
             for (int col = 1; col <= 8; ++col) {
-                ChessPosition currentPos = new ChessPosition(row, col);
-
-                if (poses != null && poses.contains(currentPos)) {
-                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
-                } else if ((row + col) % 2 == 0) {
-                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-                } else {
-                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-                }
-
-                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
-                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+                getPiece2(out, row, poses, col);
             }
         } else {
             for (int col = 8; col >= 1; --col) {
-                ChessPosition currentPos = new ChessPosition(row, col);
-
-                if (poses != null && poses.contains(currentPos)) {
-                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
-                } else if ((row + col) % 2 == 0) {
-                    out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-                } else {
-                    out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-                }
-
-                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
-                out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+                getPiece2(out, row, poses, col);
             }
         }
 
@@ -120,8 +98,24 @@ public class Board {
         out.println();
     }
 
+    private void getPiece2(PrintStream out, int row, Collection<ChessPosition> poses, int col) {
+        ChessPosition currentPos = new ChessPosition(row, col);
+
+        if (poses != null && poses.contains(currentPos)) {
+            out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+        } else if ((row + col) % 2 == 0) {
+            out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+        } else {
+            out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+        }
+
+        ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
+        out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
+    }
+
+
     private static String getPiece(ChessPiece piece) {
-        if (piece == null) return EMPTY;
+        if (piece == null) {return EMPTY;}
         boolean isWhite = (piece.getTeamColor() == ChessGame.TeamColor.WHITE);
         return switch (piece.getPieceType()) {
             case PAWN -> isWhite ? WHITE_PAWN : BLACK_PAWN; 

@@ -102,7 +102,10 @@ public class GameClient implements Client, NotificationHandler {
             ChessPosition to = parsePostion(params[1]);
             ChessPiece.PieceType promotion = null;
             ChessPiece piece = board.chessBoard.getPiece(from);
-            if (piece != null && piece.getPieceType() == ChessPiece.PieceType.PAWN && ((!isWhitePlayer && to.getRow() == 1) || (isWhitePlayer && to.getRow() == 8))) {
+            if (piece != null
+                 && piece.getPieceType() == ChessPiece.PieceType.PAWN
+                  && ((!isWhitePlayer && to.getRow() == 1) 
+                  || (isWhitePlayer && to.getRow() == 8))) {
                 promotion = promote();
             }
             ChessMove move = new ChessMove(from, to, promotion);
@@ -184,7 +187,7 @@ public class GameClient implements Client, NotificationHandler {
 
     // helper functions
     private ChessPosition parsePostion(String input) throws ResponseException {
-        if (input.length() != 2) return null;
+        if (input.length() != 2) {return null;}
         int col = input.charAt(0) - 'a' + 1;
         int row = input.charAt(1) - '1' + 1;
         return new ChessPosition(row, col);

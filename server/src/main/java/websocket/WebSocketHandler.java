@@ -28,7 +28,7 @@ import websocket.messages.NotificationMessage;
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
 
     private final ConnectionManager connections = new ConnectionManager();
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
     private final AuthDAO authDAO;
     private final GameDAO gameDAO;
 
@@ -48,7 +48,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         int gameId = -1;
         Session session = ctx.session;
         try {
-            UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
+            UserGameCommand command = GSON.fromJson(ctx.message(), UserGameCommand.class);
             gameId = command.getGameID();
             String authToken = command.getAuthToken();
             var authData = authDAO.getAuthData(authToken);
@@ -60,7 +60,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             switch(command.getCommandType()) {
                 case CONNECT -> connect(session, gameId, username);
                 case MAKE_MOVE -> {
-                    MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
+                    MakeMoveCommand moveCommand = GSON.fromJson(ctx.message(), MakeMoveCommand.class);
                     makeMove(session, moveCommand, username);
                 }
                 case LEAVE -> leave(session, gameId, username);
@@ -69,7 +69,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         } catch (UnauthorizedException authEx) {
             try {
                 ErrorMessage errorMessage = new ErrorMessage(authEx.getMessage());
-            session.getRemote().sendString(gson.toJson(errorMessage));
+            session.getRemote().sendString(GSON.toJson(errorMessage));
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -89,11 +89,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         
         GameData gameData = gameDAO.getGame(gameID);
         if (gameData == null) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("Invalid Game ID")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("Invalid Game ID")));
             return;
         }
         var loadGame = new LoadGameMessage(gameData.game());
-        session.getRemote().sendString(gson.toJson(loadGame));
+        session.getRemote().sendString(GSON.toJson(loadGame));
         String message;
         if (username.equals(gameData.whiteUsername())) {
             message = String.format("%s joined the game as White.", username);
@@ -118,12 +118,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                         : gameData.blackUsername();
 
         if (!username.equals(currentUser)) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("It is not your turn.")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("It is not your turn.")));
             return;
         }
 
         if (gameData.game().isGameOver() == true) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("Game is already over, leave the match")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("Game is already over, leave the match")));
             return;
         }
         
@@ -140,7 +140,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
         gameDAO.updateGame(gameData);
         var loadGame = new LoadGameMessage(gameData.game());
-        session.getRemote().sendString(gson.toJson(loadGame));
+        session.getRemote().sendString(GSON.toJson(loadGame));
 
         String moveMsg = String.format("%s moved from %s to %s", username, move.getStartPosition().toString(), move.getEndPosition().toString());
         connections.broadcast(gameID, session, new NotificationMessage(moveMsg));
@@ -173,17 +173,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void resign(Session session, Integer gameID, String username) throws IOException {
         GameData gameData = gameDAO.getGame(gameID);
         if (gameData == null) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("Invalid Game ID")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("Invalid Game ID")));
             return;
         }
 
         if (gameData.game().isGameOver() == true) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("Game is already over leave the match")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("Game is already over leave the match")));
             return;
         }
 
         if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
-            session.getRemote().sendString(gson.toJson(new ErrorMessage("Observers cannot resign")));
+            session.getRemote().sendString(GSON.toJson(new ErrorMessage("Observers cannot resign")));
             return;
         }
         var message = String.format("%s Has resigned.", username);

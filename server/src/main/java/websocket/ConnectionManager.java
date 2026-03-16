@@ -18,16 +18,6 @@ public class ConnectionManager {
         connections.computeIfAbsent(gameID, k -> new HashSet<>()).add(session);
     }  
 
-    public void removeGame(Integer gameID, Session session) {
-        Set<Session> sessionSet  = connections.get(gameID);
-        if (sessionSet != null) {
-            sessionSet.remove(session);
-            if (sessionSet.isEmpty()) {
-                connections.remove(gameID);
-            }
-        }
-    }
-
     public void remove(Session session) {
         for (var entry : connections.entrySet()) {
             Set<Session> sessions = entry.getValue();

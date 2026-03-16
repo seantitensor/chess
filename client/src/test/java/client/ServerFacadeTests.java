@@ -108,7 +108,9 @@ public class ServerFacadeTests {
         var result2 = facade.register(new RegisterRequest("name1", "pass1", "email1"));
         var game = facade.createGame(result.authToken(), new CreateGameRequest("gameName"));
         facade.joinGame(result2.authToken(), new JoinGameRequest(ChessGame.TeamColor.WHITE, game.gameID()));
-        assertThrows(ResponseException.class, ()-> facade.joinGame(result.authToken(), new JoinGameRequest(ChessGame.TeamColor.WHITE, game.gameID())));
+        assertThrows(ResponseException.class,
+             ()-> facade.joinGame(result.authToken(),
+              new JoinGameRequest(ChessGame.TeamColor.WHITE, game.gameID())));
     }
 
      @Test
