@@ -7,11 +7,12 @@ import exception.ResponseException;
 import request.CreateGameRequest;
 import request.JoinGameRequest;
 import response.ListGameResult;
-import ui.Board;
 
 public class PostClient implements Client {
     private final ServerFacade server;
     private String authToken;
+    private Integer gameID;
+    private boolean isWhitePlayer;
 
     public PostClient(String serverUrl) throws ResponseException {
         server = new ServerFacade(serverUrl);
@@ -19,6 +20,18 @@ public class PostClient implements Client {
 
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
+    }
+
+    public Integer getGameID() {
+        return gameID;
+    }
+
+    public boolean getWhitePlayer() {
+        return isWhitePlayer;
+    }
+
+    private void setWhitePlayer(boolean isWhitePlayer) {
+        this.isWhitePlayer = isWhitePlayer;
     }
 
     @Override
@@ -52,9 +65,11 @@ public class PostClient implements Client {
     public String join(String... params) throws ResponseException {
         if (params.length == 2) {
             try {
-                server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
-                Board.drawBoard(System.out, (params[1].toUpperCase().equals("WHITE")));
-                return "Joined game.";
+              this.gameID = Integer.valueOf(params[0]);
+              server.joinGame(authToken, new JoinGameRequest(ChessGame.TeamColor.valueOf(params[1].toUpperCase()), Integer.valueOf(params[0])));
+              boolean whitePlayer = params[1].equalsIgnoreCase("white");
+              setWhitePlayer(whitePlayer);
+              return "Joined game.";
             } catch (Exception ex) {
                 throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID> [WHITE|BLACK]");
             }
@@ -64,20 +79,8 @@ public class PostClient implements Client {
 
     public String observe(String... params) throws ResponseException {
         if (params.length == 1) {
-            var gameIds = server.listGames(authToken);
-            try { 
-                for ( ListGameResult result : gameIds.games()) {
-                    if (result.gameID() == Integer.valueOf(params[0])) {
-                        Board.drawBoard(System.out, true);
-                        return "Observing game.";
-                    }
-                }
-            } catch (Exception ex) {
-                throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
-
-            }
-            // server.joinGame(authToken, new JoinGameRequest(null, Integer.valueOf(params[0])));
-            throw new ResponseException(ResponseException.Code.ClientError, "Game Id doesn't exist");
+            this.gameID = Integer.valueOf(params[0]);
+            return "Observing game.";
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <ID>");
     }

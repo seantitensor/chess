@@ -25,6 +25,7 @@ import response.NewGameResult;
 import response.RegisterResult;
 import services.GameService;
 import services.UserService;
+import websocket.WebSocketHandler;
 
 public class Server {
 
@@ -63,6 +64,16 @@ public class Server {
 
         // exception handling
         javalin.exception(Exception.class, this::exceptionHandler);
+
+        // websocket connection
+
+        WebSocketHandler wsHandler = new WebSocketHandler(authDAO, gameDAO);
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(wsHandler::handleConnect);
+            ws.onMessage(wsHandler::handleMessage);
+            ws.onClose(wsHandler::handleClose);
+            ws.onError(ctx -> System.out.println("WS Error: " + ctx.error().getMessage()));
+        });
     }
 
     public int run(int desiredPort) {
@@ -118,7 +129,7 @@ public class Server {
         String authToken = ctx.header("authorization");
         JoinGameRequest req = ctx.bodyAsClass(JoinGameRequest.class);
 
-        if (req.gameID() == null) {
+        if (req.playerColor() == null || req.gameID() == null) {
             throw new BadRequestException("bad request");
         }
 

@@ -2,9 +2,12 @@ package ui;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import static ui.EscapeSequences.BLACK_BISHOP;
@@ -26,6 +29,13 @@ import static ui.EscapeSequences.WHITE_QUEEN;
 import static ui.EscapeSequences.WHITE_ROOK;
 
 public class Board {
+    public ChessBoard chessBoard;
+
+    public Board() {
+        this.chessBoard = new ChessBoard();
+        chessBoard.resetBoard();
+    }
+
     // Board dimensions.
     private static final int BOARD_SIZE_IN_SQUARES = 8;
 
@@ -47,49 +57,64 @@ public class Board {
         out.println();
     }
 
-    public static void drawBoard(PrintStream out, boolean isWhite) {
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
-
+    public void drawBoard(PrintStream out, boolean isWhite, Collection<ChessMove> moves) {
         drawHeaders(out, isWhite);
         if (isWhite == false) {
             for (int boardRow = 1 ; boardRow <= BOARD_SIZE_IN_SQUARES ; ++boardRow) {
-                drawRow(out,boardRow, board, isWhite);
+                drawRow(out,boardRow,isWhite, moves);
             }
         } else {
             for (int boardRow = BOARD_SIZE_IN_SQUARES ; boardRow >= 1 ; --boardRow) {
-                drawRow(out,boardRow, board, isWhite);
+                drawRow(out,boardRow,isWhite, moves);
             }
         }
         drawHeaders(out, isWhite);
         out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
-    private static void drawRow(PrintStream out, int row, ChessBoard board, boolean isWhite) {
+    private void drawRow(PrintStream out, int row, boolean isWhite, Collection<ChessMove> moves) {
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + row + EMPTY + RESET_BG_COLOR);
+
+        Collection<ChessPosition> poses;
+        if (moves!= null) {
+            poses = moves.stream()
+                        .map(ChessMove::getEndPosition)
+                        .collect(Collectors.toSet());
+        } else {
+            poses = null;
+        }
         if (isWhite) {
             for (int col = 1; col <= 8; ++col) {
-                if ((row + col) % 2 == 0) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+
+                if (poses != null && poses.contains(currentPos)) {
+                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+                } else if ((row + col) % 2 == 0) {
                     out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
                 } else {
                     out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
                 }
 
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
                 out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
             }
         } else {
             for (int col = 8; col >= 1; --col) {
-                if ((row + col) % 2 == 0) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+
+                if (poses != null && poses.contains(currentPos)) {
+                    out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+                } else if ((row + col) % 2 == 0) {
                     out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
                 } else {
                     out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
                 }
 
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                ChessPiece piece = chessBoard.getPiece(new ChessPosition(row, col));
                 out.print(getPiece(piece) + SET_TEXT_COLOR_YELLOW );
             }
         }
+
         out.print(SET_BG_COLOR_MAGENTA + SET_TEXT_COLOR_YELLOW + EMPTY + row + RESET_BG_COLOR);
         out.print(RESET_BG_COLOR);
         out.println();
